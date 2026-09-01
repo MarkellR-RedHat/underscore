@@ -62,3 +62,25 @@ underscore score --brief brief.json --program out/track/track.rb --engine sonicp
 ## Status
 
 Day one. Built in the open at Rawlslab.
+
+## The catalog
+
+`scripts/catalog.py` renders a matrix of beds: six profiles (explainer, launch,
+demo, deep-dive, playful, keynote) at 60, 90, and 120 seconds, rotating keys,
+deterministic seeds. Every bed ships as a full bundle. Failures are logged to
+`catalog/catalog-log.jsonl` and skipped; rerunning resumes.
+
+```bash
+.venv/bin/python scripts/catalog.py --out catalog --limit 18
+```
+
+Renders are audible while they run (the record tap is pre-device, so system
+volume does not change what gets written).
+
+## Tests
+
+```bash
+.venv/bin/python -m pytest -q tests
+```
+
+The synth engine makes the whole pipeline testable without Sonic Pi.
