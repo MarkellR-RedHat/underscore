@@ -187,7 +187,7 @@ def sections_from_cuts(cuts: list[float], duration: float, min_len: float = 8.0)
         density = len(inside) / max(1.0, (end - start) / 10.0)
         energy = max(0.25, min(0.85, 0.35 + 0.15 * density))
         if i == 0:
-            mood, energy = "curious", min(energy, 0.4)
+            mood, energy = "curious", max(0.45, min(energy, 0.55))
         elif i == n - 1:
             mood, energy = "resolve", min(energy, 0.35)
         elif energy > 0.65:
@@ -200,7 +200,7 @@ def sections_from_cuts(cuts: list[float], duration: float, min_len: float = 8.0)
 
 def default_brief(title: str, duration: float = 60.0) -> Brief:
     b = Brief(title=title, duration=duration, sections=[
-        Section(0.0, duration * 0.15, "curious", 0.35, "cold open, pad only"),
+        Section(0.0, duration * 0.15, "curious", 0.5, "open with pulse, pad and light ticks"),
         Section(duration * 0.15, duration * 0.7, "focused", 0.5, "main body, steady pulse"),
         Section(duration * 0.7, duration * 0.88, "lift", 0.7, "lift, add motif"),
         Section(duration * 0.88, duration, "resolve", 0.3, "outro, strip back"),

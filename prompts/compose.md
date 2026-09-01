@@ -27,9 +27,13 @@ Return exactly one fenced code block tagged `ruby`. No prose outside it.
    Use `with_fx :reverb`, `:echo`, `:lpf`, `:hpf` sparingly.
 
 ## Energy mapping (energy is 0..1 per section)
-- < 0.4  : pad + occasional bass note, no drums. Sparse.
-- 0.4-0.65: pad + bass pulse + light hats or ticks. Steady.
-- > 0.65 : add kick pattern, a motif (arpeggio or pluck line), fuller pad.
+- < 0.3  : pad + occasional bass note, no drums. Sparse. (Rare: only for true cold opens.)
+- 0.3-0.5: pad + bass pulse + light ticks or closed hats. Moving, not sleepy.
+- 0.5-0.7: add a soft kick on 1 and 3, a simple motif, steady groove.
+- > 0.7  : full kick pattern, motif, fuller pad, brighter register.
+These are beds for developer and corporate videos: an audience should feel
+momentum within the first bar. Section 0 must establish a pulse (bass or
+ticks) on bar 1 unless its energy is below 0.3.
 Moods: curious = open voicings, unresolved; focused = steady, repeating;
 lift = brighter, higher register, add layers; resolve = strip back to root chord;
 tense = minor 2nds, filtered; warm = low pads, slow; playful = pluck syncopation;
