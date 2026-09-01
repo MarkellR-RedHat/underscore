@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "underscore-audio"
+version = "0.1.0"
+description = "Code-generated, measured, CC0 background music for developer videos. Runs on your machine and your own Claude Code account."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "Markell Rawls"}]
+dependencies = [
+    "numpy>=1.24",
+    "soundfile>=0.12",
+    "pyloudnorm>=0.1.1",
+    "pedalboard>=0.9",
+    "librosa>=0.10",
+    "python-osc>=1.8",
+]
+
+[project.optional-dependencies]
+video = ["scenedetect>=0.6", "opencv-python-headless>=4.8", "faster-whisper>=1.0"]
+mastering = ["matchering>=2.0"]
+dev = ["pytest>=8"]
+
+[project.scripts]
+underscore = "underscore.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

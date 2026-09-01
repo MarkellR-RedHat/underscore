@@ -1,0 +1,24 @@
+{
+  "title": "quantization-explainer",
+  "duration": 96.0,
+  "bpm": 92,
+  "key": "D",
+  "mode": "minor",
+  "style": "warm electronic, analog pads, soft percussion, developer video bed",
+  "seed": 7,
+  "target_lufs": -14.0,
+  "sections": [
+    {"start": 0.0,  "end": 10.4, "mood": "curious",   "energy": 0.35, "notes": "cold open, pad only"},
+    {"start": 10.4, "end": 62.6, "mood": "focused",   "energy": 0.5,  "notes": "explanation under speech, steady pulse"},
+    {"start": 62.6, "end": 83.5, "mood": "lift",      "energy": 0.75, "notes": "the reveal, add motif and drums"},
+    {"start": 83.5, "end": 96.0, "mood": "resolve",   "energy": 0.3,  "notes": "outro, strip back to pad"}
+  ],
+  "hits": [
+    {"t": 62.6, "kind": "riser"},
+    {"t": 83.5, "kind": "soft-hit"}
+  ],
+  "speech": [
+    {"start": 2.0, "end": 60.0},
+    {"start": 64.0, "end": 82.0}
+  ]
+}
