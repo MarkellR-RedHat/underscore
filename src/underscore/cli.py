@@ -21,13 +21,41 @@ def cmd_init(a):
     _p(f"wrote {out}  (edit moods, energies, hits, speech; then: underscore score --brief {out})")
 
 
+def default_llm(explicit: str | None) -> str | None:
+    """Video mode uses the model when a backend is configured, without an explicit --llm.
+    None means the brief stays heuristic, and the run says so."""
+    if explicit:
+        return explicit
+    if os.environ.get("UNDERSCORE_CLI"):
+        return "cli"
+    if os.environ.get("UNDERSCORE_API_URL"):
+        return "api"
+    if os.environ.get("UNDERSCORE_LOCAL"):
+        return "local"
+    return None
+
+
+def resolve_out(out: str | None, default_name: str) -> Path:
+    """`-o` may be a file or a directory (score accepts a directory; master now does too).
+    A directory, or a path with no audio extension, gets the default file name inside it."""
+    if not out:
+        return Path(default_name)
+    p = Path(out)
+    if p.is_dir() or out.endswith(os.sep) or p.suffix.lower() not in (".wav", ".flac", ".aiff", ".aif"):
+        p.mkdir(parents=True, exist_ok=True)
+        return p / default_name
+    return p
+
+
 def cmd_analyze(a):
     from .analyze import brief_from_video
-    brief, info = brief_from_video(a.video, a.title, a.llm, a.model, not a.no_transcript)
+    llm = default_llm(a.llm)
+    brief, info = brief_from_video(a.video, a.title, llm, a.model, not a.no_transcript)
     out = Path(a.out or f"{brief.title}.brief.json")
     brief.save(out)
-    _p(f"{len(info['cuts'])} cuts, {info['speech_spans']} speech spans, "
-       f"{info['transcript_segments']} transcript segments -> {out}")
+    how = f"brief by the model ({llm})" if llm else "brief by heuristic (no backend configured: set UNDERSCORE_CLI, UNDERSCORE_API_URL, or UNDERSCORE_LOCAL, or pass --llm)"
+    _p(f"{len(info['cuts'])} cuts, {info['speech_spans']} speech spans ({info['speech_source']}), "
+       f"{info['transcript_segments']} transcript segments, {how} -> {out}")
 
 
 def cmd_compose(a):
@@ -53,7 +81,8 @@ def cmd_render(a):
 def cmd_master(a):
     from .master import master, duck
     brief = Brief.load(a.brief)
-    info = master(a.wav, a.out or f"{brief.title}.master.wav", brief, a.reference, loop=a.loop)
+    out = resolve_out(a.out, f"{brief.title}.master.wav")
+    info = master(a.wav, out, brief, a.reference, loop=a.loop)
     if brief.speech and not a.no_duck:
         info["ducked"] = duck(info["master"], Path(info["master"]).with_suffix(".ducked.wav"), brief.speech)
     _p(json.dumps(info, indent=2))
@@ -133,10 +162,16 @@ def cmd_score(a):
 
     if a.sonic_pi_app:
         os.environ["UNDERSCORE_SONIC_PI_APP"] = a.sonic_pi_app
+    brief_info = {"brief_source": "file", "analyze_backend": None, "analyze_model": None, "analyze_seconds": None}
     if a.video:
         from .analyze import brief_from_video
-        brief, info = brief_from_video(a.video, a.title, a.llm if not a.offline_brief else None, a.model)
-        _p(f"analyze: {len(info['cuts'])} cuts, {info['speech_spans']} speech spans")
+        import time as _t0
+        _s = _t0.perf_counter()
+        brief, info = brief_from_video(a.video, a.title, None if a.offline_brief else default_llm(a.llm), a.model)
+        brief_info = {"brief_source": info["brief_source"], "analyze_backend": info["analyze_backend"],
+                      "analyze_model": info["analyze_model"], "analyze_seconds": round(_t0.perf_counter() - _s, 1),
+                      "speech_source": info["speech_source"]}
+        _p(f"analyze: {len(info['cuts'])} cuts, {info['speech_spans']} speech spans ({info['speech_source']}), brief by {info['brief_source']}")
     else:
         brief = Brief.load(a.brief)
     _die_if_invalid(brief)
@@ -191,7 +226,8 @@ def cmd_score(a):
     for r in reasons:
         _p(f"  - {r}")
     outdir = Path(a.out or f"out/{brief.title}")
-    manifest = export_bundle(outdir, brief, program, rinfo, minfo, ducked, m, ok, reasons, timings, loop=a.loop)
+    manifest = export_bundle(outdir, brief, program, rinfo, minfo, ducked, m, ok, reasons, timings, loop=a.loop,
+                             brief_info=brief_info, compose_backend=None if engine == "synth" or a.program else a.llm)
     _p(f"export: {outdir}  ({len(manifest['files'])} files)")
     _p("timing: " + " ".join(f"{k}={v}s" for k, v in timings.items()))
     if not ok and not a.ship_anyway:

@@ -47,7 +47,8 @@ def write_markers(brief: Brief, outdir: Path) -> list[str]:
 def export_bundle(outdir: str | Path, brief: Brief, program: str | None,
                   render_info: dict, master_info: dict, ducked: str | None,
                   measurements: dict, passed: bool, reasons: list[str],
-                  timings: dict | None = None, loop: bool = False) -> dict:
+                  timings: dict | None = None, loop: bool = False,
+                  brief_info: dict | None = None, compose_backend: str | None = None) -> dict:
     out = Path(outdir)
     out.mkdir(parents=True, exist_ok=True)
     files: dict[str, str] = {}
@@ -80,6 +81,12 @@ def export_bundle(outdir: str | Path, brief: Brief, program: str | None,
         "gate_passed": passed,
         "gate_reasons": reasons,
         "stage_seconds": timings or {},
+        # receipts: where the brief came from and which seam composed the program. Cost in
+        # dollars is not recorded because the cli and local seams do not report it; the
+        # backend and model names are, and the time each model stage took is in stage_seconds.
+        "brief": {"source": "file", "analyze_backend": None, "analyze_model": None, "analyze_seconds": None,
+                  **(brief_info or {})},
+        "compose_backend": compose_backend,
         "measurements": measurements,
         "master": {k: v for k, v in master_info.items() if k != "master"},
         "files": files,

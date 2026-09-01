@@ -168,16 +168,32 @@ def brief_from_video(video: str | Path, title: str | None = None,
     with tempfile.TemporaryDirectory() as td:
         wav = extract_audio(video, Path(td) / "audio.wav")
         transcript = transcribe(wav) if with_transcript else []
-        if transcript:
-            # Whisper's segment timestamps are the most reliable speech map we
-            # have (it already runs a VAD and ignores room noise). Merge them.
-            speech = _merge([Span(t["start"], t["end"]) for t in transcript], gap=0.6, min_len=0.3)
-        else:
-            speech = speech_spans(wav)
+        speech, speech_source = speech_map(speech_spans(wav), transcript)
     brief = Brief(title=title, duration=round(dur, 2), bpm=bpm_for_cuts(cuts),
                   sections=sections_from_cuts(cuts, dur), speech=speech)
     brief.quantize_to_bars()
     if llm:
         brief = _llm_brief(brief, transcript, llm, model)
-    analysis = {"cuts": cuts, "speech_spans": len(speech), "transcript_segments": len(transcript)}
+    analysis = {"cuts": cuts, "speech_spans": len(speech), "speech_source": speech_source,
+                "transcript_segments": len(transcript),
+                "brief_source": "model" if llm else "heuristic", "analyze_backend": llm, "analyze_model": model}
     return brief, analysis
+
+
+def speech_map(vad: list[Span], transcript: list[dict]) -> tuple[list[Span], str]:
+    """The speech spans a bed ducks under.
+
+    Whisper's segments are contiguous through a talk, so merging them collapses three
+    minutes of speech into one span and the bed never swells in a pause. The VAD keeps the
+    pauses. So: VAD spans are the map, and the transcript only says where speech is at all
+    (a VAD span that touches no transcript segment is room noise and is dropped). Without a
+    transcript the VAD stands alone; without a VAD the transcript merge is the fallback.
+    Returns (spans, source) with source one of vad, vad+transcript, transcript.
+    """
+    if not transcript:
+        return vad, "vad"
+    tspans = _merge([Span(t["start"], t["end"]) for t in transcript], gap=0.6, min_len=0.3)
+    if not vad:
+        return tspans, "transcript"
+    keep = [v for v in vad if any(v.start < t.end and t.start < v.end for t in tspans)]
+    return (keep, "vad+transcript") if keep else (tspans, "transcript")
