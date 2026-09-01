@@ -4,3 +4,5 @@ out/
 __pycache__/
 *.egg-info/
 .DS_Store
+catalog-run.log
+catalog/
