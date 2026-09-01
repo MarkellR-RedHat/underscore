@@ -94,13 +94,28 @@ Audio, video frames, and finished tracks never leave the machine in any mode. If
 
 Most people who want this tool want it for company videos. `docs/POLICY.md` walks through the questions that come up: who owns the music, why the output is CC0, what a company actually receives, how the data is handled, and the practical rules that keep personal and company work separate. The short version: compose on your own time and hardware if you want to own the catalog, release it under CC0, and your employer uses it the way it would use any public domain library. Read your own company's policy; this project is not legal advice.
 
+## Collections
+
+A collection is a sonic world: its instruments, drum kit, effects, harmonic flavor, and arrangement signature. The same brief rendered in two collections sounds like two different libraries. Six ship today:
+
+| Collection | Sound |
+|---|---|
+| analog | Warm analog pads and soft percussion. |
+| glass | Bright, clean, and spacious; bells and piano with air between notes. |
+| pulse | Driving electronic; pulsing bass, four on the floor when the energy allows. |
+| ember | Lo-fi warmth with a gentle swing and a little vinyl texture. |
+| drift | Cinematic ambient; long pads, sub bass, sparse pings. |
+| orbit | Organic and friendly; kalimba, tonewheel organ, brushed percussion. |
+
+Within a collection, each bed receives a deterministic instrument assignment from its seed, so eighteen beds in one world still differ from one another. Set `"collection"` in the brief, or pass `--collection` to the catalog script. Collections are defined in `src/underscore/collections.py`; adding one is a matter of listing its instruments and writing its sound in a paragraph.
+
 ## The catalog
 
 `scripts/catalog.py` renders a matrix of beds (six profiles at 60, 90, and 120 seconds, rotating keys, fixed seeds) and `scripts/build_catalog_page.py` turns the results into a browsable page with players, measurements, and downloads. Failed beds are logged and retried on the next run.
 
 ```bash
-.venv/bin/python scripts/catalog.py --out catalog --limit 18
-.venv/bin/python scripts/build_catalog_page.py --catalog catalog
+.venv/bin/python scripts/catalog.py --out catalog --collection glass --limit 18
+.venv/bin/python scripts/build_catalog_page.py --catalog catalog   # groups by collection
 ```
 
 ## Project layout

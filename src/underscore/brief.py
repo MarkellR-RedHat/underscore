@@ -53,6 +53,7 @@ class Brief:
     style: str = "warm electronic, analog pads, soft percussion"
     seed: int = 1
     target_lufs: float = -14.0
+    collection: str = "analog"
     sections: list[Section] = field(default_factory=list)
     hits: list[Hit] = field(default_factory=list)
     speech: list[Span] = field(default_factory=list)

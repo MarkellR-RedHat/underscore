@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import html
 import json
+import sys
 from pathlib import Path
 
 CSS = """
@@ -21,6 +22,7 @@ CSS = """
 h1{font-family:var(--display);font-weight:900;font-size:2.4rem;letter-spacing:-.02em}
 h1 span{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .sub{color:var(--soft);margin:.6rem 0 2rem;max-width:640px;line-height:1.6}
+.coll{margin-bottom:2.6rem}.coll h2{font-family:var(--display);font-weight:900;font-size:1.7rem;text-transform:capitalize;margin-bottom:.2rem}.tag-line{color:var(--soft);margin-bottom:1rem}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.2rem}
 .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:1.2rem;position:relative;overflow:hidden}
 .card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--grad)}
@@ -35,10 +37,10 @@ footer{margin-top:3rem;color:var(--faint);font-size:.85rem;text-align:center;lin
 """
 
 
-def card(d: Path, man: dict, brief: dict) -> str:
+def card(d: Path, man: dict, brief: dict, prefix: str = "") -> str:
     m = man["measurements"]
     files = man["files"]
-    rel = lambda p: html.escape(f"{d.name}/{Path(p).name}")
+    rel = lambda p: html.escape(f"{prefix}/{d.name}/{Path(p).name}" if prefix else f"{d.name}/{Path(p).name}")
     profile = brief["title"].split("-")[0]
     links = [("master WAV", files.get("master")), ("ducked WAV", files.get("ducked")),
              ("source .rb", files.get("source")), ("markers", files.get("markers_csv"))]
@@ -59,13 +61,24 @@ def main():
     ap.add_argument("--catalog", default="catalog")
     a = ap.parse_args()
     root = Path(a.catalog)
-    cards, skipped = [], 0
-    for d in sorted(p for p in root.iterdir() if p.is_dir() and (p / "manifest.json").exists()):
-        man = json.loads((d / "manifest.json").read_text())
-        if not man.get("gate_passed"):
-            skipped += 1; continue
-        brief = json.loads((d / "brief.json").read_text())
-        cards.append(card(d, man, brief))
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+    from underscore.collections import COLLECTIONS
+    sections, total, skipped = [], 0, 0
+    for cname, coll in COLLECTIONS.items():
+        cdir = root / cname
+        if not cdir.is_dir():
+            continue
+        cards = []
+        for d in sorted(p for p in cdir.iterdir() if p.is_dir() and (p / "manifest.json").exists()):
+            man = json.loads((d / "manifest.json").read_text())
+            if not man.get("gate_passed"):
+                skipped += 1; continue
+            brief = json.loads((d / "brief.json").read_text())
+            cards.append(card(d, man, brief, prefix=cname))
+        if cards:
+            total += len(cards)
+            sections.append(f'<section class="coll"><h2>{html.escape(cname)}</h2><p class="tag-line">{html.escape(coll.tagline)}. {html.escape(coll.sound.split(".")[0])}.</p><div class="grid">{"".join(cards)}</div></section>')
+    cards = sections
     page = f"""<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Underscore catalog</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Fraunces:opsz,wght@9..144,900&display=swap" rel="stylesheet">
@@ -74,11 +87,11 @@ def main():
 <p class="sub">Code-generated background music for developer videos. Every bed here passed a measurement gate
 (loudness, true peak, energy curve), ships with its Sonic Pi source and seed, and is dedicated to the public domain under CC0.
 Use any of it in anything, no attribution needed.</p>
-<div class="grid">{''.join(cards)}</div>
-<footer>{len(cards)} beds shipped · {skipped} withheld by the gate · a <a href="https://rawlslab.ai">Rawlslab</a> project · code MIT, music CC0</footer>
+{''.join(cards)}
+<footer>{total} beds shipped · {skipped} withheld by the gate · a <a href="https://rawlslab.ai">Rawlslab</a> project · code MIT, music CC0</footer>
 </body></html>"""
     (root / "index.html").write_text(page)
-    print(f"wrote {root/'index.html'}: {len(cards)} beds listed, {skipped} withheld")
+    print(f"wrote {root/'index.html'}: {total} beds listed, {skipped} withheld")
 
 
 if __name__ == "__main__":

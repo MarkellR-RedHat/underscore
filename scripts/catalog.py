@@ -19,6 +19,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from underscore.brief import Brief, Section, Hit  # noqa: E402
+from underscore.collections import COLLECTIONS, get as get_collection  # noqa: E402
 
 # The matrix: what a developer-video editor actually reaches for.
 PROFILES = {
@@ -40,8 +41,11 @@ KEYS = {"minor": ["D", "A", "E", "G"], "major": ["C", "G", "F", "D"]}
 DURATIONS = [60.0, 90.0, 120.0]
 
 
-def make_brief(profile: str, duration: float, key: str, seed: int) -> Brief:
+def make_brief(profile: str, duration: float, key: str, seed: int, collection: str = "analog") -> Brief:
     style, mode, bpm, arc = PROFILES[profile]
+    coll = get_collection(collection)
+    bpm = bpm + coll.tempo_shift
+    style = f"{coll.tagline}; {style}"
     sections, t = [], 0.0
     for mood, energy, share in arc:
         end = round(t + duration * share, 3)
@@ -50,7 +54,8 @@ def make_brief(profile: str, duration: float, key: str, seed: int) -> Brief:
     sections[-1].end = duration
     hits = [Hit(round(sections[2].start, 3), "riser"), Hit(round(sections[-1].start, 3), "soft-hit")]
     b = Brief(title=f"{profile}-{key.lower()}{mode[:3]}-{int(duration)}s-{seed}", duration=duration,
-              bpm=bpm, key=key, mode=mode, style=style, seed=seed, sections=sections, hits=hits)
+              bpm=bpm, key=key, mode=mode, style=style, seed=seed, sections=sections, hits=hits,
+              collection=collection)
     return b.quantize_to_bars()
 
 
@@ -61,18 +66,21 @@ def main():
     ap.add_argument("--engine", default="sonicpi")
     ap.add_argument("--llm", default="claude")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--collection", default="analog", choices=list(COLLECTIONS))
     a = ap.parse_args()
 
-    out = Path(a.out); (out / "briefs").mkdir(parents=True, exist_ok=True)
+    # each collection lives in its own folder and its own seed range
+    seed_base = 100 + 1000 * list(COLLECTIONS).index(a.collection)
+    out = Path(a.out) / a.collection; (out / "briefs").mkdir(parents=True, exist_ok=True)
     combos = list(product(PROFILES.keys(), DURATIONS))
     plan = []
     for i, (profile, dur) in enumerate(combos):
         mode = PROFILES[profile][1]
         key = KEYS[mode][i % len(KEYS[mode])]
-        plan.append(make_brief(profile, dur, key, seed=100 + i))
+        plan.append(make_brief(profile, dur, key, seed=seed_base + i, collection=a.collection))
     plan = plan[: a.limit]
     log = out / "catalog-log.jsonl"
-    print(f"{len(plan)} beds planned -> {out}", file=sys.stderr)
+    print(f"{len(plan)} beds planned -> {out}  [collection {a.collection}]", file=sys.stderr)
     for b in plan:
         bp = out / "briefs" / f"{b.title}.json"
         b.save(bp)

@@ -15,6 +15,7 @@ import subprocess
 from pathlib import Path
 
 from .brief import Brief
+from . import collections as _collections
 
 PROMPT_PATH = Path(__file__).resolve().parents[2] / "prompts" / "compose.md"
 KEY_OCTAVE = 3
@@ -28,8 +29,11 @@ def _spec() -> str:
 
 def build_prompt(brief: Brief, feedback: str | None = None) -> str:
     bars = brief.section_bars()
+    coll = _collections.get(getattr(brief, "collection", "analog") or "analog")
     lines = [
         _spec(),
+        "",
+        coll.prompt_block(brief.seed),
         "",
         "## This brief",
         f"key: {brief.key}{KEY_OCTAVE}  mode: {brief.mode}  bpm: {brief.bpm}  style: {brief.style}",
