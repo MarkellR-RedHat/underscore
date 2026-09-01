@@ -146,7 +146,7 @@ def harness(brief: Brief, generated: str) -> str:
         out.append(f"sec_{i} {b}")
     # Hold the run open past the recording window: Sonic Pi 5 pauses its audio
     # engine the moment all runs complete, which would cut the record tap early.
-    hold_beats = brief.seconds_to_beats(6.0)
+    hold_beats = brief.seconds_to_beats(14.0)
     out.append(f"sleep {hold_beats:.4f}  # hold for the recorder tail")
     out.append("")
     return "\n".join(out)

@@ -79,8 +79,9 @@ def main():
         if a.dry_run:
             continue
         dest = out / b.title
-        if (dest / "manifest.json").exists():
-            print(f"skip {b.title} (exists)", file=sys.stderr); continue
+        mf = dest / "manifest.json"
+        if mf.exists() and json.loads(mf.read_text()).get("gate_passed"):
+            print(f"skip {b.title} (shipped)", file=sys.stderr); continue
         t0 = time.time()
         r = subprocess.run([sys.executable, "-m", "underscore.cli", "score", "--brief", str(bp),
                             "--engine", a.engine, "--llm", a.llm, "-o", str(dest)],

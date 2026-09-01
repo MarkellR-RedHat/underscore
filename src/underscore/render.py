@@ -36,7 +36,9 @@ def sonicpi_available() -> bool:
     return RUBY.exists() and BOOT_LIB.exists() and RECORDER.exists()
 
 
-def render_sonicpi(program: str, brief: Brief, out_wav: Path, tail: float = 2.0) -> dict:
+def render_sonicpi(program: str, brief: Brief, out_wav: Path, tail: float = 12.0) -> dict:
+    """tail covers the spider's start latency on a fresh boot (synth loading can
+    delay the first note by several seconds) so the outro is never truncated."""
     if not sonicpi_available():
         raise RuntimeError("Sonic Pi 5 not found at /Applications/Sonic Pi.app (brew install --cask sonic-pi)")
     out_wav.parent.mkdir(parents=True, exist_ok=True)
@@ -51,11 +53,18 @@ def render_sonicpi(program: str, brief: Brief, out_wav: Path, tail: float = 2.0)
     if proc.returncode == 1 or not raw.exists():
         raise RuntimeError("Sonic Pi headless render produced no audio:\n" + log[-1500:])
     y, sr = sf.read(raw, always_2d=True)
+    preroll = _preroll_seconds(y, sr)
     y = _align_and_trim(y, sr, brief.duration)
     y = _resample(y, sr, SR)
     sf.write(out_wav, y, SR, subtype="PCM_24")
     return {"engine": "sonicpi", "raw": str(out_wav), "stems": {}, "source": str(rb),
-            "sonicpi_errors": errors, "sonicpi_log": log[-4000:]}
+            "preroll_s": round(preroll, 2), "sonicpi_errors": errors, "sonicpi_log": log[-4000:]}
+
+
+def _preroll_seconds(y: np.ndarray, sr: int, floor_db: float = -50.0) -> float:
+    mag = np.abs(y).max(axis=1)
+    thr = 10 ** (floor_db / 20)
+    return float(np.argmax(mag > thr)) / sr if (mag > thr).any() else 0.0
 
 
 def _align_and_trim(y: np.ndarray, sr: int, duration: float, floor_db: float = -50.0) -> np.ndarray:
