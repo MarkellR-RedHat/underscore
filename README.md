@@ -31,7 +31,7 @@ Each bed is one folder:
 The pipeline has six stages. Each one is a command, and `underscore score` runs them all.
 
 1. **Analyze** (video mode only). Scene cuts are detected with PySceneDetect. Speech is located with faster-whisper, and its timestamps become the speech map; WebRTC VAD is the fallback when there is no transcript. A tempo is chosen so that bar lines land near the scene cuts. The result is a brief. This stage runs entirely on your machine.
-2. **Compose.** The brief is turned into a prompt, and a language model writes Sonic Pi code: one function per section, one per hit, all in key, built from an allowed set of synths and samples. The default backend is the Claude Code command line tool, so it uses a subscription you already have. The Anthropic API and Ollama are also supported. The code is validated (required functions present, no forbidden constructs, no helper names that collide with Sonic Pi's own API) and wrapped in a harness that sets tempo and seed and sequences the sections to an exact number of bars.
+2. **Compose.** The brief is turned into a prompt, and a language model writes Sonic Pi code: one function per section, one per hit, all in key, built from an allowed set of synths and samples. The model is yours, reached through one of three seams: a command-line agent you already run, a chat-completions HTTP endpoint, or a local model runner (see Backends). The code is validated (required functions present, no forbidden constructs, no helper names that collide with Sonic Pi's own API) and wrapped in a harness that sets tempo and seed and sequences the sections to an exact number of bars.
 3. **Render.** Sonic Pi 5 plays the program headlessly and records it. Rendering happens in real time: a 90 second bed takes about 90 seconds plus boot. A built-in synth engine can stand in when Sonic Pi is not available, so the rest of the pipeline stays testable. If Sonic Pi reports a runtime error, the errors are handed back to the model and the program is composed again once before the run is declared a failure.
 4. **Master.** A gentle chain (high-pass, compression, two shelves, light reverb), loudness normalization to the brief's target, a transparent peak limiter with true-peak headroom, and fades. With a reference track and `matchering` installed, the tonal balance is matched to the reference.
 5. **Measure.** Integrated loudness, true peak, loudness range, spectral centroid, and per-section onset density are computed. The gate refuses a bed whose loudness misses the target by more than 1 LU, whose true peak exceeds -1 dBTP, whose length is wrong, whose sections are silent, or whose energy curve does not follow the brief.
@@ -75,7 +75,7 @@ With Sonic Pi and a composing backend installed, drop `--engine synth` for real 
 ```bash
 underscore score --brief my-video.brief.json  # compose with a model, render with Sonic Pi
 underscore score --video talk.mp4             # video mode
-underscore score --video talk.mp4 --offline-brief --llm ollama   # nothing leaves the machine
+underscore score --video talk.mp4 --offline-brief --llm local   # nothing leaves the machine
 ```
 
 Individual stages are available as `analyze`, `compose`, `render`, `master`, and `measure`. `scripts/check-render.sh` reports whether this machine can render with Sonic Pi.
@@ -85,8 +85,28 @@ Individual stages are available as `analyze`, `compose`, `render`, `master`, and
 - Python 3.10 or newer.
 - **Sonic Pi 5.0 or newer, installed in `/Applications`, is a hard requirement for real renders.** The render is realtime and audible: a 90 second bed takes about 90 seconds of playback plus boot. Renders are macOS only today; on Linux the built-in synth engine runs the whole pipeline instead, and the Sonic Pi paths in `render.py` are untested (see the roadmap).
 - `ffmpeg` and `ffprobe` for MP3 previews and video mode (`brew install ffmpeg` on macOS; `apt-get install ffmpeg` on Debian and Ubuntu, which also needs `libatomic1` for the mastering chain).
-- A composing backend for real music: the Claude Code command line tool, an Anthropic API key, or Ollama with a local model. Composing is the slowest stage, typically one to three minutes per bed. The synth engine skips it.
+- A composing backend for real music: any command-line agent, chat-completions endpoint, or local model runner you already use (see Backends below). Composing is the slowest stage, typically one to three minutes per bed. The synth engine skips it.
 - Video mode downloads the faster-whisper `base` transcription model (about 75 MB) from the network on its first run and caches it; after that, analysis is fully local.
+
+## Backends
+
+Underscore does not bundle a model or default to a vendor; it drives whatever you already have. Pick with `--llm`:
+
+| Backend | How it runs | Configure |
+|---|---|---|
+| `cli` (default) | A command-line agent on this machine. The prompt goes to stdin; the generated code comes back on stdout. | `UNDERSCORE_CLI` holds the command, flags included. A literal `{model}` in it is replaced by `--model` or `UNDERSCORE_MODEL`. |
+| `api` | A chat-completions style HTTP endpoint. | `UNDERSCORE_API_URL`, a model via `--model` or `UNDERSCORE_MODEL`, and optionally `UNDERSCORE_API_KEY` (sent as a bearer token). |
+| `local` | The same command seam as `cli`, for a local model runner, so source material never leaves the machine. | `UNDERSCORE_LOCAL`, falling back to `UNDERSCORE_CLI`. |
+
+For example, with the Claude Code command line tool:
+
+<!-- rot: skip -->
+```bash
+export UNDERSCORE_CLI="claude -p --output-format text"
+underscore score --brief my-video.brief.json
+```
+
+Any command that reads a prompt on stdin and prints the code on stdout works the same way, including local model runners.
 
 ## The Sonic Pi render, in detail
 
@@ -108,7 +128,7 @@ Composing again from the same brief will produce different code, because the mod
 
 ## Data flow
 
-| Stage | Brief mode | Video mode, cloud model | Video mode, `--offline-brief` or Ollama |
+| Stage | Brief mode | Video mode, cloud model | Video mode, `--offline-brief` or `--llm local` |
 |---|---|---|---|
 | Analyze | not used | cuts, transcript, speech map computed locally | same |
 | Compose | brief text is sent to the model | brief plus transcript text and cut times are sent | nothing is sent |
@@ -166,10 +186,10 @@ src/underscore/
   measure.py   measurements and the gate
   export.py    the bundle
   cli.py       the command line
-prompts/compose.md          the composing spec the model follows
-vendor/underscore-record.rb the headless recorder
-scripts/                    catalog batch, catalog page, render check
-tests/                      unit tests; the synth engine keeps them independent of Sonic Pi
+  prompts/compose.md   the composing spec the model follows
+  vendor/underscore-record.rb  the headless recorder
+scripts/               catalog batch, catalog page + index, render check
+tests/                 unit tests; the synth engine keeps them independent of Sonic Pi
 ```
 
 ## Tests

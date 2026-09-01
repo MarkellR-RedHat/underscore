@@ -3,13 +3,26 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "underscore-audio"
+name = "rawlslab-underscore"
 version = "0.1.0"
-description = "Code-generated, measured, CC0 background music for developer videos. Runs on your machine and your own Claude Code account."
+description = "Code-generated, measured, CC0 background music for developer videos. Runs on your machine, with a model account you already have."
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [{name = "Markell Rawls"}]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Sound/Audio :: Sound Synthesis",
+]
 dependencies = [
     "numpy>=1.24",
     "soundfile>=0.12",
@@ -18,6 +31,10 @@ dependencies = [
     "librosa>=0.10",
     "python-osc>=1.8",
 ]
+
+[project.urls]
+Homepage = "https://rawlslab.ai/underscore/"
+Repository = "https://github.com/MarkellRawls/underscore"
 
 [project.optional-dependencies]
 video = ["scenedetect>=0.6", "opencv-python-headless>=4.8", "faster-whisper>=1.0", "webrtcvad-wheels>=2.0"]
@@ -29,3 +46,6 @@ underscore = "underscore.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+underscore = ["prompts/*.md", "vendor/*.rb"]

@@ -1,0 +1,61 @@
+name: ci
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ["3.10", "3.12"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Linux system deps
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libatomic1 ffmpeg
+      - run: pip install -e '.[dev]'
+      - run: python -m pytest -q tests
+
+  synth-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: sudo apt-get update && sudo apt-get install -y libatomic1 ffmpeg
+      - run: pip install -e .
+      - name: Full pipeline on the synth engine
+        run: |
+          underscore init ci-bed --duration 30
+          underscore score --brief ci-bed.brief.json --engine synth
+          test -f out/ci-bed/manifest.json
+          python -c "import json; m=json.load(open('out/ci-bed/manifest.json')); assert m['gate_passed'], m['gate_reasons']"
+
+  wheel-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: sudo apt-get update && sudo apt-get install -y libatomic1 ffmpeg
+      - run: pip install build
+      - run: python -m build
+      - name: Install the wheel in a clean venv outside the checkout and run it
+        run: |
+          python -m venv /tmp/smoke
+          /tmp/smoke/bin/pip install dist/*.whl
+          cd /tmp
+          /tmp/smoke/bin/underscore --help
+          /tmp/smoke/bin/python -c "import importlib.resources as r; assert r.files('underscore').joinpath('prompts/compose.md').is_file(); assert r.files('underscore').joinpath('vendor/underscore-record.rb').is_file()"
+          /tmp/smoke/bin/underscore init smoke --duration 20
+          /tmp/smoke/bin/underscore score --brief smoke.brief.json --engine synth

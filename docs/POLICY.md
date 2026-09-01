@@ -39,11 +39,11 @@ The composing step can send text to a cloud model. Everything else runs on your 
 |---|---|
 | Brief mode | The brief you wrote: durations, moods, tempo. |
 | Video mode with a cloud model | The brief, the transcript text, and the scene cut times. |
-| Video mode with `--offline-brief`, or with Ollama | Nothing. |
+| Video mode with `--offline-brief`, or with `--llm local` | Nothing. |
 
 Audio, video frames, and finished tracks never leave the machine in any mode.
 
-If the footage is unreleased or confidential, do not run its transcript through an external model. Use `--offline-brief`, or run the composing step with a local model through Ollama. The music will be slightly less tailored to the words and exactly as usable.
+If the footage is unreleased or confidential, do not run its transcript through an external model. Use `--offline-brief`, or run the composing step with a local model runner via `--llm local`. The music will be slightly less tailored to the words and exactly as usable.
 
 ## Practical rules
 

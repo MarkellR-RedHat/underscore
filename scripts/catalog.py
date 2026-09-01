@@ -66,7 +66,7 @@ def main():
     ap.add_argument("--out", default="catalog")
     ap.add_argument("--limit", type=int, default=24)
     ap.add_argument("--engine", default="sonicpi")
-    ap.add_argument("--llm", default="claude")
+    ap.add_argument("--llm", default="cli")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--collection", default="analog", choices=list(COLLECTIONS))
     a = ap.parse_args()
