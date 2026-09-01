@@ -24,7 +24,7 @@ It runs on your machine and your own accounts. Nothing is hosted.
 ```
 analyze (video -> brief)   [optional, local: PySceneDetect + faster-whisper + VAD]
 compose (brief -> Sonic Pi code)   [Claude Code CLI | Anthropic API | Ollama]
-render  (code -> WAV 48k/24)       [Sonic Pi headless | built-in synth fallback]
+render  (code -> WAV 48k/24)       [Sonic Pi 5 headless recorder | built-in synth fallback]
 master  (WAV -> -14 LUFS, fades)   [pedalboard + pyloudnorm, optional matchering]
 measure (gate: loudness, peak, energy vs brief)   [librosa + pyloudnorm]
 export  (bundle: master, ducked, stems, mp3, markers, source, manifest)

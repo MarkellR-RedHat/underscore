@@ -10,7 +10,6 @@ Two engines:
 from __future__ import annotations
 
 import math
-import shutil
 import subprocess
 import tempfile
 import time
@@ -26,46 +25,37 @@ SR = 48000
 
 # ---------------------------------------------------------------- sonic pi --
 
-def _tool() -> str:
-    t = shutil.which("sonic-pi-tool")
-    if not t:
-        raise RuntimeError("sonic-pi-tool not found (pip install sonic-pi-tool) and open Sonic Pi.app")
-    return t
+APP_SERVER = Path("/Applications/Sonic Pi.app/Contents/Resources/app/server")
+RUBY = APP_SERVER / "native" / "ruby" / "bin" / "ruby"
+BOOT_LIB = APP_SERVER / "ruby" / "bin" / "headless_boot.rb"
+RECORDER = Path(__file__).resolve().parents[2] / "vendor" / "underscore-record.rb"
 
 
 def sonicpi_available() -> bool:
-    t = shutil.which("sonic-pi-tool")
-    if not t:
-        return False
-    return subprocess.run([t, "check"], capture_output=True).returncode == 0
+    """Sonic Pi 5 ships a headless boot library; our recorder builds on it."""
+    return RUBY.exists() and BOOT_LIB.exists() and RECORDER.exists()
 
 
-def render_sonicpi(program: str, brief: Brief, out_wav: Path, tail: float = 2.5) -> dict:
-    tool = _tool()
-    if subprocess.run([tool, "check"], capture_output=True).returncode != 0:
-        raise RuntimeError("Sonic Pi server not reachable: open Sonic Pi.app first")
-    with tempfile.NamedTemporaryFile("w", suffix=".rb", delete=False) as f:
-        f.write(program)
-        rb = f.name
+def render_sonicpi(program: str, brief: Brief, out_wav: Path, tail: float = 2.0) -> dict:
+    if not sonicpi_available():
+        raise RuntimeError("Sonic Pi 5 not found at /Applications/Sonic Pi.app (brew install --cask sonic-pi)")
+    out_wav.parent.mkdir(parents=True, exist_ok=True)
+    rb = out_wav.with_suffix(".rb")
+    rb.write_text(program)
     raw = out_wav.with_suffix(".sonicpi.wav")
-    rec = subprocess.Popen([tool, "record", str(raw)], stdin=subprocess.PIPE,
-                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    time.sleep(1.0)
-    subprocess.run([tool, "eval-file", rb], check=True, capture_output=True)
-    time.sleep(brief.duration + tail)
-    try:
-        rec.stdin.write("\n"); rec.stdin.flush()
-    except Exception:
-        pass
-    rec.wait(timeout=30)
-    subprocess.run([tool, "stop"], capture_output=True)
-    if not raw.exists():
-        raise RuntimeError("Sonic Pi recording did not produce a file")
+    cmd = [str(RUBY), str(RECORDER), "-o", str(raw), "-d", f"{brief.duration + tail:.2f}",
+           "-f", str(rb), "-s", str(brief.seed)]
+    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=brief.duration + 120)
+    log = proc.stdout + proc.stderr
+    errors = [ln for ln in log.splitlines() if "ERROR" in ln]
+    if proc.returncode == 1 or not raw.exists():
+        raise RuntimeError("Sonic Pi headless render produced no audio:\n" + log[-1500:])
     y, sr = sf.read(raw, always_2d=True)
     y = _align_and_trim(y, sr, brief.duration)
     y = _resample(y, sr, SR)
     sf.write(out_wav, y, SR, subtype="PCM_24")
-    return {"engine": "sonicpi", "raw": str(out_wav), "stems": {}}
+    return {"engine": "sonicpi", "raw": str(out_wav), "stems": {}, "source": str(rb),
+            "sonicpi_errors": errors, "sonicpi_log": log[-4000:]}
 
 
 def _align_and_trim(y: np.ndarray, sr: int, duration: float, floor_db: float = -50.0) -> np.ndarray:
