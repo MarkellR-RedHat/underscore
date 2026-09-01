@@ -86,7 +86,10 @@ def cmd_score(a):
 
     program = None
     engine = a.engine
-    if engine != "synth":
+    if a.program:
+        program = Path(a.program).read_text()
+        _p(f"compose: reusing {a.program}")
+    elif engine != "synth":
         try:
             _p(f"compose: asking {a.llm} for Sonic Pi code")
             _, program = compose(brief, a.llm, a.model)
@@ -139,6 +142,7 @@ def main(argv=None):
     s.add_argument("--title"); s.add_argument("--llm", default="claude", choices=["claude", "anthropic", "ollama"]); s.add_argument("--model")
     s.add_argument("--offline-brief", action="store_true", help="video mode: derive the brief heuristically, no model call")
     s.add_argument("--engine", default="auto", choices=["auto", "sonicpi", "synth"]); s.add_argument("--reference")
+    s.add_argument("--program", help="reuse an existing Sonic Pi program (skip compose)")
     s.add_argument("--workdir"); s.add_argument("-o", "--out"); s.add_argument("--ship-anyway", action="store_true")
     s.set_defaults(fn=cmd_score)
 

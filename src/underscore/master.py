@@ -107,9 +107,9 @@ def master(in_wav: str | Path, out_wav: str | Path, brief: Brief,
             pass
 
     y, before = _normalize(y, sr, brief.target_lufs)
-    y = _brickwall(y, sr, ceiling_db=-1.2)
+    y = _brickwall(y, sr, ceiling_db=-1.8)   # sample ceiling; inter-sample peaks ride ~0.3-0.5 dB above
     y, _ = _normalize(y, sr, brief.target_lufs)   # second pass: recover loudness the limiter took
-    y = _brickwall(y, sr, ceiling_db=-1.2)
+    y = _brickwall(y, sr, ceiling_db=-1.8)
     y = _fades(y, sr, fade_in, fade_out)
     y = np.clip(y, -1.0, 1.0)
     Path(out_wav).parent.mkdir(parents=True, exist_ok=True)

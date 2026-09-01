@@ -44,6 +44,21 @@ Step zero on a new machine: `scripts/check-render.sh` tells you whether Sonic
 Pi headless rendering works. If it does not yet, the built-in synth engine
 (`--engine synth`) lets you exercise the entire pipeline today.
 
+## How the Sonic Pi render works (no GUI)
+
+Sonic Pi 5 ships a headless boot library. `vendor/underscore-record.rb` builds
+on it: boot the daemon and engine, start recording through the spider (the
+same path as the GUI's record button), run the program for the brief's
+duration, save the WAV, shut down. Rendering is realtime: a 90 s bed takes
+about 90 s plus a few seconds of boot. The harness holds the run open past the
+recording window because the engine pauses itself once every run completes.
+
+Re-render a take you like without asking the model again:
+
+```bash
+underscore score --brief brief.json --program out/track/track.rb --engine sonicpi
+```
+
 ## Status
 
 Day one. Built in the open at Rawlslab.
