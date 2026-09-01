@@ -48,34 +48,72 @@ def scene_cuts(video: str | Path, threshold: float = 27.0) -> list[float]:
     return [s[0].get_seconds() for s in scenes[1:]]
 
 
-def speech_spans(wav: str | Path, min_len: float = 0.3, gap: float = 0.4) -> list[Span]:
-    """Energy-based voice activity: dependency-free and good enough for ducking."""
+def _merge(spans: list[Span], gap: float, min_len: float) -> list[Span]:
+    merged: list[Span] = []
+    for sp in spans:
+        if merged and sp.start - merged[-1].end < gap:
+            merged[-1].end = sp.end
+        else:
+            merged.append(Span(sp.start, sp.end))
+    return [Span(round(x.start, 2), round(x.end, 2)) for x in merged if x.end - x.start >= min_len]
+
+
+def _webrtc_vad(wav: str | Path, aggressiveness: int = 3, min_len: float = 0.3, gap: float = 0.4) -> list[Span]:
+    """Real voice activity detection (Google's WebRTC VAD): tells speech from
+    room noise, music, and wind, which an energy threshold cannot."""
+    import webrtcvad
+    import librosa
+    y, sr = librosa.load(str(wav), sr=16000, mono=True)
+    pcm = (np.clip(y, -1, 1) * 32767).astype(np.int16).tobytes()
+    vad = webrtcvad.Vad(aggressiveness)
+    frame_ms = 30
+    n = int(sr * frame_ms / 1000) * 2          # bytes per frame (int16)
+    flags = []
+    for i in range(0, len(pcm) - n + 1, n):
+        flags.append(vad.is_speech(pcm[i:i + n], sr))
+    # smooth: a frame is speech if most of its 300 ms neighbourhood is
+    win = 10
+    sm = np.convolve(np.array(flags, dtype=float), np.ones(win) / win, mode="same") >= 0.7
+    spans, start = [], None
+    for i, f in enumerate(sm):
+        t = i * frame_ms / 1000
+        if f and start is None:
+            start = t
+        elif not f and start is not None:
+            spans.append(Span(start, t)); start = None
+    if start is not None:
+        spans.append(Span(start, len(sm) * frame_ms / 1000))
+    return _merge(spans, gap, min_len)
+
+
+def _energy_vad(wav: str | Path, min_len: float = 0.3, gap: float = 0.4) -> list[Span]:
+    """Fallback when webrtcvad is unavailable: loud-enough frames count as speech."""
     import librosa
     y, sr = librosa.load(str(wav), sr=16000, mono=True)
     hop = 160
     rms = librosa.feature.rms(y=y, frame_length=400, hop_length=hop)[0]
     db = librosa.amplitude_to_db(rms + 1e-9, ref=np.max)
     active = db > -32
-    spans: list[Span] = []
-    start = None
-    for i, a in enumerate(active):
+    spans, start = [], None
+    for i, on in enumerate(active):
         t = i * hop / sr
-        if a and start is None:
+        if on and start is None:
             start = t
-        elif not a and start is not None:
+        elif not on and start is not None:
             spans.append(Span(start, t)); start = None
     if start is not None:
         spans.append(Span(start, len(y) / sr))
-    merged: list[Span] = []
-    for s in spans:
-        if merged and s.start - merged[-1].end < gap:
-            merged[-1].end = s.end
-        else:
-            merged.append(Span(s.start, s.end))
-    return [Span(round(s.start, 2), round(s.end, 2)) for s in merged if s.end - s.start >= min_len]
+    return _merge(spans, gap, min_len)
 
 
-def transcribe(wav: str | Path, model_size: str = "small") -> list[dict]:
+def speech_spans(wav: str | Path, min_len: float = 0.3, gap: float = 0.4) -> list[Span]:
+    try:
+        return _webrtc_vad(wav, min_len=min_len, gap=gap)
+    except ImportError:
+        return _energy_vad(wav, min_len=min_len, gap=gap)
+
+
+def transcribe(wav: str | Path, model_size: str = "base") -> list[dict]:
     try:
         from faster_whisper import WhisperModel
     except ImportError:
@@ -129,8 +167,13 @@ def brief_from_video(video: str | Path, title: str | None = None,
     cuts = scene_cuts(video)
     with tempfile.TemporaryDirectory() as td:
         wav = extract_audio(video, Path(td) / "audio.wav")
-        speech = speech_spans(wav)
         transcript = transcribe(wav) if with_transcript else []
+        if transcript:
+            # Whisper's segment timestamps are the most reliable speech map we
+            # have (it already runs a VAD and ignores room noise). Merge them.
+            speech = _merge([Span(t["start"], t["end"]) for t in transcript], gap=0.6, min_len=0.3)
+        else:
+            speech = speech_spans(wav)
     brief = Brief(title=title, duration=round(dur, 2), bpm=bpm_for_cuts(cuts),
                   sections=sections_from_cuts(cuts, dur), speech=speech)
     brief.quantize_to_bars()

@@ -14,8 +14,8 @@ It runs on your machine and your own accounts. Nothing is hosted.
 
 - **Brief mode.** You describe what you need: duration, mood, energy curve,
   hit points. Nothing leaves your machine except the brief text you wrote.
-- **Video mode.** Point it at a video. Scene cuts, transcript, and speech map
-  are extracted locally, a brief is derived, and the music changes where the
+- **Video mode.** Point it at a video. Scene cuts, transcript (faster-whisper),
+  and speech map (Whisper timestamps, WebRTC VAD as fallback) are extracted locally, a brief is derived, and the music changes where the
   picture changes and ducks under the voice. For source material you cannot
   share, use `--llm ollama` (fully local) or write the brief yourself.
 
@@ -84,3 +84,12 @@ volume does not change what gets written).
 ```
 
 The synth engine makes the whole pipeline testable without Sonic Pi.
+
+## Catalog page
+
+```bash
+.venv/bin/python scripts/build_catalog_page.py --catalog catalog   # -> catalog/index.html
+```
+
+A playable index of every bed that passed the gate, with measurements and
+downloads. Beds the gate withheld are counted but not listed.
