@@ -92,6 +92,10 @@ Sonic Pi is looked for at `/Applications/Sonic Pi.app`; point `UNDERSCORE_SONIC_
 - A composing backend for real music: any command-line agent, chat-completions endpoint, or local model runner you already use (see Backends below). Composing is the slowest stage, typically one to three minutes per bed. The synth engine skips it.
 - Video mode downloads the faster-whisper `base` transcription model (about 75 MB) from the network on its first run and caches it; after that, analysis is fully local.
 
+## Runs on your machine
+
+Everything executes locally: analysis, rendering, mastering, measurement, and export. There is no service behind this project and no account with it. The one step that can touch a network is composing, and only through a seam you configure yourself: a command-line agent you already run, an HTTP endpoint you point it at, or a local model runner. With `--engine synth`, or with `--offline-brief` and a local runner, nothing leaves the machine at all.
+
 ## Backends
 
 Underscore does not bundle a model or default to a vendor; it drives whatever you already have. Pick with `--llm`:
