@@ -95,11 +95,19 @@ def main():
                             "--engine", a.engine, "--llm", a.llm, "-o", str(dest)],
                            capture_output=True, text=True)
         ok = r.returncode == 0
-        rec = {"title": b.title, "ok": ok, "seconds": round(time.time() - t0, 1),
+        stages = {}
+        mfp = dest / "manifest.json"
+        if mfp.exists():
+            try:
+                stages = json.loads(mfp.read_text()).get("stage_seconds", {})
+            except json.JSONDecodeError:
+                stages = {}
+        rec = {"title": b.title, "ok": ok, "seconds": round(time.time() - t0, 1), "stages": stages,
                "tail": r.stderr.strip().splitlines()[-3:]}
         with log.open("a") as f:
             f.write(json.dumps(rec) + "\n")
-        print(f"{'ok  ' if ok else 'FAIL'} {b.title}  ({rec['seconds']}s)", file=sys.stderr)
+        detail = ", ".join(f"{k} {v}s" for k, v in stages.items() if k in ("compose", "recompose", "render"))
+        print(f"{'ok  ' if ok else 'FAIL'} {b.title}  ({rec['seconds']}s; {detail})", file=sys.stderr)
 
 
 if __name__ == "__main__":

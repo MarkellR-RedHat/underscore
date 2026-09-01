@@ -46,7 +46,8 @@ def write_markers(brief: Brief, outdir: Path) -> list[str]:
 
 def export_bundle(outdir: str | Path, brief: Brief, program: str | None,
                   render_info: dict, master_info: dict, ducked: str | None,
-                  measurements: dict, passed: bool, reasons: list[str]) -> dict:
+                  measurements: dict, passed: bool, reasons: list[str],
+                  timings: dict | None = None) -> dict:
     out = Path(outdir)
     out.mkdir(parents=True, exist_ok=True)
     files: dict[str, str] = {}
@@ -75,6 +76,7 @@ def export_bundle(outdir: str | Path, brief: Brief, program: str | None,
         "seed": brief.seed,
         "gate_passed": passed,
         "gate_reasons": reasons,
+        "stage_seconds": timings or {},
         "measurements": measurements,
         "master": {k: v for k, v in master_info.items() if k != "master"},
         "files": files,

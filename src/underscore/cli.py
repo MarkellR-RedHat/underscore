@@ -84,6 +84,9 @@ def cmd_score(a):
     work.mkdir(parents=True, exist_ok=True)
     brief.save(work / "brief.json")
 
+    import time as _time
+    timings: dict[str, float] = {}
+    _t = _time.perf_counter()
     program = None
     engine = a.engine
     if a.program:
@@ -100,6 +103,7 @@ def cmd_score(a):
             _p(f"compose unavailable ({e}); falling back to synth engine")
             engine = "synth"
 
+    timings["compose"] = round(_time.perf_counter() - _t, 1); _t = _time.perf_counter()
     from .render import RenderError
     try:
         rinfo = render(program, brief, work / f"{brief.title}.raw.wav", engine)
@@ -112,19 +116,24 @@ def cmd_score(a):
         fb = "Sonic Pi reported these runtime errors in your previous code:\n" + "\n".join(f"- {e}" for e in err.errors)
         _, program = compose(brief, a.llm, a.model, feedback=fb)
         (work / f"{brief.title}.rb").write_text(program)
+        timings["recompose"] = round(_time.perf_counter() - _t, 1); _t = _time.perf_counter()
         rinfo = render(program, brief, work / f"{brief.title}.raw.wav", engine)
+    timings["render"] = round(_time.perf_counter() - _t, 1); _t = _time.perf_counter()
     _p(f"render: {rinfo['engine']} -> {rinfo['raw']}" + (f"  (preroll {rinfo['preroll_s']}s)" if 'preroll_s' in rinfo else ""))
     minfo = master(rinfo["raw"], work / f"{brief.title}.master.wav", brief, a.reference)
     ducked = duck(minfo["master"], work / f"{brief.title}.ducked.wav", brief.speech) if brief.speech else None
+    timings["master"] = round(_time.perf_counter() - _t, 1); _t = _time.perf_counter()
     m = measure(minfo["master"], brief)
     ok, reasons = gate(m, brief)
+    timings["measure"] = round(_time.perf_counter() - _t, 1)
     _p(f"measure: {m['lufs_integrated']:.1f} LUFS, peak {m['true_peak_dbtp']:.2f} dBTP, "
        f"LRA {m['loudness_range_lu']:.1f} LU -> {'PASS' if ok else 'FAIL'}")
     for r in reasons:
         _p(f"  - {r}")
     outdir = Path(a.out or f"out/{brief.title}")
-    manifest = export_bundle(outdir, brief, program, rinfo, minfo, ducked, m, ok, reasons)
+    manifest = export_bundle(outdir, brief, program, rinfo, minfo, ducked, m, ok, reasons, timings)
     _p(f"export: {outdir}  ({len(manifest['files'])} files)")
+    _p("timing: " + " ".join(f"{k}={v}s" for k, v in timings.items()))
     if not ok and not a.ship_anyway:
         _p("gate FAILED: bundle written for inspection but not marked shippable (use --ship-anyway to override)")
         sys.exit(2)
