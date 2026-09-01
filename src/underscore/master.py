@@ -47,7 +47,11 @@ def _brickwall(y: np.ndarray, sr: int, ceiling_db: float = -1.0,
     n = len(y)
     nb = int(np.ceil(n / blk))
     pad = nb * blk - n
-    mag = np.abs(np.pad(y, ((0, pad), (0, 0)))).max(axis=1).reshape(nb, blk).max(axis=1)
+    # Measure TRUE peak per block: 4x oversampling exposes the inter-sample
+    # peaks that a sample-domain limiter misses, which is what the gate checks.
+    import librosa
+    up = librosa.resample(np.pad(y, ((0, pad), (0, 0))).T, orig_sr=sr, target_sr=sr * 4, res_type="soxr_hq")
+    mag = np.abs(up).max(axis=0).reshape(nb, blk * 4).max(axis=1)
     req = np.minimum(1.0, ceiling / np.maximum(mag, 1e-9))
     look = max(1, int(lookahead_ms))               # blocks of lookahead
     g = req.copy()
@@ -107,9 +111,9 @@ def master(in_wav: str | Path, out_wav: str | Path, brief: Brief,
             pass
 
     y, before = _normalize(y, sr, brief.target_lufs)
-    y = _brickwall(y, sr, ceiling_db=-1.8)   # sample ceiling; inter-sample peaks ride ~0.3-0.5 dB above
+    y = _brickwall(y, sr, ceiling_db=-1.5)   # true-peak ceiling (oversampled inside the limiter)
     y, _ = _normalize(y, sr, brief.target_lufs)   # second pass: recover loudness the limiter took
-    y = _brickwall(y, sr, ceiling_db=-1.8)
+    y = _brickwall(y, sr, ceiling_db=-1.5)
     y = _fades(y, sr, fade_in, fade_out)
     y = np.clip(y, -1.0, 1.0)
     Path(out_wav).parent.mkdir(parents=True, exist_ok=True)
