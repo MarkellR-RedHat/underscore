@@ -162,13 +162,13 @@ def cmd_score(a):
 
     if a.sonic_pi_app:
         os.environ["UNDERSCORE_SONIC_PI_APP"] = a.sonic_pi_app
-    brief_info = {"brief_source": "file", "analyze_backend": None, "analyze_model": None, "analyze_seconds": None}
+    brief_info = {"source": "file", "analyze_backend": None, "analyze_model": None, "analyze_seconds": None}
     if a.video:
         from .analyze import brief_from_video
         import time as _t0
         _s = _t0.perf_counter()
         brief, info = brief_from_video(a.video, a.title, None if a.offline_brief else default_llm(a.llm), a.model)
-        brief_info = {"brief_source": info["brief_source"], "analyze_backend": info["analyze_backend"],
+        brief_info = {"source": info["brief_source"], "analyze_backend": info["analyze_backend"],
                       "analyze_model": info["analyze_model"], "analyze_seconds": round(_t0.perf_counter() - _s, 1),
                       "speech_source": info["speech_source"]}
         _p(f"analyze: {len(info['cuts'])} cuts, {info['speech_spans']} speech spans ({info['speech_source']}), brief by {info['brief_source']}")

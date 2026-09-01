@@ -61,7 +61,7 @@ def test_15_manifest_records_the_briefs_provenance(tmp_path: Path):
     b = default_brief("gap15", 8.0)
     r = render_synth(b, tmp_path / "raw.wav")
     m = master(r["raw"], tmp_path / "m.wav", b)
-    info = {"brief_source": "model", "analyze_backend": "cli", "analyze_model": None, "analyze_seconds": 12.3, "speech_source": "vad+transcript"}
+    info = {"source": "model", "analyze_backend": "cli", "analyze_model": None, "analyze_seconds": 12.3, "speech_source": "vad+transcript"}
     man = export_bundle(tmp_path / "out", b, None, r, m, None, {"lufs_integrated": -14.0}, True, [], {}, brief_info=info, compose_backend=None)
     assert man["brief"] == {"source": "model", "analyze_backend": "cli", "analyze_model": None, "analyze_seconds": 12.3, "speech_source": "vad+transcript"}
     assert man["compose_backend"] is None
