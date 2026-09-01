@@ -88,7 +88,7 @@ def main():
 (loudness, true peak, energy curve), ships with its Sonic Pi source and seed, and is dedicated to the public domain under CC0.
 Use any of it in anything, no attribution needed.</p>
 {''.join(cards)}
-<footer>{total} beds shipped · {skipped} withheld by the gate · a <a href="https://rawlslab.ai">Rawlslab</a> project · code MIT, music CC0</footer>
+<footer>{total} beds shipped · {skipped} withheld by the gate · a <a href="https://rawlslab.ai">RawlsLab</a> project · code MIT, music CC0</footer>
 </body></html>"""
     (root / "index.html").write_text(page)
     print(f"wrote {root/'index.html'}: {total} beds listed, {skipped} withheld")
