@@ -7,3 +7,5 @@ __pycache__/
 catalog-run.log
 catalog/
 .rot/
+build/
+dist/
