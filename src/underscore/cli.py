@@ -100,8 +100,20 @@ def cmd_score(a):
             _p(f"compose unavailable ({e}); falling back to synth engine")
             engine = "synth"
 
-    rinfo = render(program, brief, work / f"{brief.title}.raw.wav", engine)
-    _p(f"render: {rinfo['engine']} -> {rinfo['raw']}")
+    from .render import RenderError
+    try:
+        rinfo = render(program, brief, work / f"{brief.title}.raw.wav", engine)
+    except RenderError as err:
+        # Sonic Pi rejected the program at runtime: hand the errors back to the
+        # model once, then try again. Static validation cannot catch everything.
+        _p("render: Sonic Pi reported runtime errors; recomposing with feedback")
+        for e in err.errors[:4]:
+            _p(f"  - {e}")
+        fb = "Sonic Pi reported these runtime errors in your previous code:\n" + "\n".join(f"- {e}" for e in err.errors)
+        _, program = compose(brief, a.llm, a.model, feedback=fb)
+        (work / f"{brief.title}.rb").write_text(program)
+        rinfo = render(program, brief, work / f"{brief.title}.raw.wav", engine)
+    _p(f"render: {rinfo['engine']} -> {rinfo['raw']}" + (f"  (preroll {rinfo['preroll_s']}s)" if 'preroll_s' in rinfo else ""))
     minfo = master(rinfo["raw"], work / f"{brief.title}.master.wav", brief, a.reference)
     ducked = duck(minfo["master"], work / f"{brief.title}.ducked.wav", brief.speech) if brief.speech else None
     m = measure(minfo["master"], brief)

@@ -47,3 +47,12 @@ def test_harness_sequences_sections_and_holds_run_open():
 
 def test_extract_code_pulls_fenced_block():
     assert extract_code("text\n```ruby\nsleep 1\n```\nmore").strip() == "sleep 1"
+
+
+def test_validate_rejects_core_name_and_unprefixed_helpers():
+    b = default_brief("t", 40.0)
+    code = GOOD + "\ndefine :tick do\n  1\nend\ndefine :pad do\n  2\nend\ndefine :us_ok do\n  3\nend\n"
+    errs = validate_code(code, b)
+    assert any(":tick" in e and "core" in e for e in errs)
+    assert any(":pad" in e and "us_" in e for e in errs)
+    assert not any("us_ok" in e for e in errs)

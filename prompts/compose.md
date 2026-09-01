@@ -21,7 +21,11 @@ Return exactly one fenced code block tagged `ruby`. No prose outside it.
 6. Per-voice `amp` <= 0.6. Pads use long `attack`/`release`. Avoid clipping.
 7. Section 0 must produce sound on beat 1 of bar 1 (no silent intro), so the
    recording aligns.
-8. Allowed synths: :prophet, :dsaw, :tb303, :blade, :hollow, :dark_ambience,
+8. Every helper you define (chord progressions, voicings, drum patterns) MUST be
+   named with the prefix `us_` (e.g. `define :us_pad do`). Never define `tick`,
+   `look`, `play`, `beat`, `bar`, `note`, `chord`, `scale`, or any other name that
+   exists in Sonic Pi's API: redefining a core name aborts the whole run.
+9. Allowed synths: :prophet, :dsaw, :tb303, :blade, :hollow, :dark_ambience,
    :pretty_bell, :piano, :pluck, :sine, :fm, :subpulse. Allowed samples: :bd_haus,
    :bd_tek, :drum_cymbal_closed, :drum_cymbal_pedal, :elec_tick, :sn_dolf, :perc_snap.
    Use `with_fx :reverb`, `:echo`, `:lpf`, `:hpf` sparingly.

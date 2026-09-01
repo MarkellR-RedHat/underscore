@@ -23,6 +23,14 @@ from .brief import Brief
 SR = 48000
 
 
+class RenderError(RuntimeError):
+    """Sonic Pi ran but reported errors; the program needs recomposing."""
+
+    def __init__(self, errors: list[str], log: str, raw: str | None = None):
+        super().__init__("Sonic Pi runtime errors:\n" + "\n".join(errors))
+        self.errors, self.log, self.raw = errors, log, raw
+
+
 # ---------------------------------------------------------------- sonic pi --
 
 APP_SERVER = Path("/Applications/Sonic Pi.app/Contents/Resources/app/server")
@@ -52,6 +60,8 @@ def render_sonicpi(program: str, brief: Brief, out_wav: Path, tail: float = 12.0
     errors = [ln for ln in log.splitlines() if "ERROR" in ln]
     if proc.returncode == 1 or not raw.exists():
         raise RuntimeError("Sonic Pi headless render produced no audio:\n" + log[-1500:])
+    if errors:
+        raise RenderError(errors, log[-4000:], str(raw))
     y, sr = sf.read(raw, always_2d=True)
     preroll = _preroll_seconds(y, sr)
     y = _align_and_trim(y, sr, brief.duration)

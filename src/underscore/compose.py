@@ -106,6 +106,21 @@ def extract_code(text: str) -> str:
 
 FORBIDDEN = ["live_loop", "use_bpm", "use_random_seed", "sync ", "cue ", "\nloop do", "loop do\n"]
 
+# Sonic Pi core API names that must never be redefined (the run aborts).
+CORE_NAMES = {
+    "tick", "look", "tick_set", "tick_reset", "play", "play_pattern", "play_chord", "sample", "synth",
+    "sleep", "beat", "bar", "note", "chord", "scale", "ring", "range", "rrand", "rrand_i", "rand",
+    "rand_i", "choose", "pick", "knit", "bools", "spread", "line", "dice", "one_in", "with_fx",
+    "with_synth", "use_synth", "with_bpm", "use_bpm", "density", "at", "time_warp", "stop", "cue",
+    "sync", "control", "kill", "vt", "rt", "bt", "set", "get", "define", "defonce", "ndefine",
+    "in_thread", "live_loop", "loop", "puts", "print", "assert", "octs", "degree", "midi", "hz",
+    "amp", "pan", "release", "attack", "sustain", "decay", "current_bpm", "use_debug",
+}
+
+
+def _define_names(code: str) -> list[str]:
+    return re.findall(r"define\s+:([A-Za-z_][A-Za-z0-9_]*)", code)
+
 
 def validate_code(code: str, brief: Brief) -> list[str]:
     errs: list[str] = []
@@ -121,6 +136,13 @@ def validate_code(code: str, brief: Brief) -> list[str]:
             errs.append(f"forbidden construct: {bad.strip()!r}")
     if "sleep" not in code:
         errs.append("no sleep calls found; sections would not advance time")
+    for name in _define_names(code):
+        if re.fullmatch(r"sec_\d+", name) or name.startswith("hit_"):
+            continue
+        if name in CORE_NAMES:
+            errs.append(f"`define :{name}` redefines a Sonic Pi core function and would abort the run; rename it :us_{name}")
+        elif not name.startswith("us_"):
+            errs.append(f"helper `define :{name}` must be prefixed us_ (rename to :us_{name})")
     return errs
 
 
@@ -153,9 +175,12 @@ def harness(brief: Brief, generated: str) -> str:
 
 
 def compose(brief: Brief, backend: str = "claude", model: str | None = None,
-            retries: int = 1) -> tuple[str, str]:
-    """Return (generated_code, full_program). Retries once with validator feedback."""
-    feedback = None
+            retries: int = 1, feedback: str | None = None) -> tuple[str, str]:
+    """Return (generated_code, full_program). Retries once with validator feedback.
+
+    `feedback` seeds the first prompt with external rejection reasons, e.g. the
+    runtime errors Sonic Pi reported for a previous attempt.
+    """
     last_errs: list[str] = []
     for _attempt in range(retries + 1):
         prompt = build_prompt(brief, feedback)
