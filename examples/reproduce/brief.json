@@ -1,0 +1,52 @@
+{
+  "title": "deep-dive-amin-60s-1109",
+  "duration": 60.0,
+  "bpm": 84,
+  "key": "A",
+  "mode": "minor",
+  "style": "Bright, clean, and spacious; cinematic ambient electronic, slow build, wide pads",
+  "seed": 1109,
+  "target_lufs": -14.0,
+  "collection": "glass",
+  "sections": [
+    {
+      "start": 0.0,
+      "end": 14.286,
+      "mood": "calm",
+      "energy": 0.4,
+      "notes": ""
+    },
+    {
+      "start": 14.286,
+      "end": 42.857,
+      "mood": "serious",
+      "energy": 0.5,
+      "notes": ""
+    },
+    {
+      "start": 42.857,
+      "end": 54.286,
+      "mood": "lift",
+      "energy": 0.7,
+      "notes": ""
+    },
+    {
+      "start": 54.286,
+      "end": 60.0,
+      "mood": "resolve",
+      "energy": 0.3,
+      "notes": ""
+    }
+  ],
+  "hits": [
+    {
+      "t": 42.857,
+      "kind": "riser"
+    },
+    {
+      "t": 54.286,
+      "kind": "soft-hit"
+    }
+  ],
+  "speech": []
+}

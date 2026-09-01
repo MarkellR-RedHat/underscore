@@ -1,7 +1,9 @@
 """render: code -> WAV.
 
 Two engines:
-  sonicpi : headless Sonic Pi via sonic-pi-tool (app must be running)
+  sonicpi : Sonic Pi 5 headless. The recorder (vendor/underscore-record.rb)
+            boots its own daemon and audio engine; the app does not need to
+            be running.
   synth   : a small built-in numpy synth that renders the BRIEF directly. It
             exists so the whole pipeline (master, measure, export) can run on a
             machine where headless Sonic Pi is not working yet, and so tests

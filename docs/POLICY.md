@@ -56,4 +56,6 @@ If the footage is unreleased or confidential, do not run its transcript through 
 
 ## What this does not cover
 
-This note is about music produced by this pipeline. It does not cover music you did not make, samples with their own licenses, or recordings of other people. Sonic Pi's bundled samples carry their own permissive terms; check the license file in the Sonic Pi installation if you rely on them, or compose with synths only.
+This note is about music produced by this pipeline. It does not cover music you did not make, samples you added with their own licenses, or recordings of other people.
+
+Sonic Pi's bundled samples raise no question. The `etc/samples/README.md` file inside the Sonic Pi installation states that every bundled sample is dedicated to the public domain under CC0 1.0: the freesound.org sources were placed in the public domain via CC0, and the donated sets (Arovane, The Black Dog, Mehackit) were donated under CC0. The published Underscore catalog uses 24 of these bundled samples, so the CC0 dedication of the output holds with nothing to review. The synths are SuperCollider synth definitions shipped with Sonic Pi under the MIT license and place no terms on audio made with them.

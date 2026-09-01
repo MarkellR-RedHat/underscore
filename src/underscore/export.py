@@ -83,10 +83,15 @@ def export_bundle(outdir: str | Path, brief: Brief, program: str | None,
         "license": "CC0-1.0",
     }
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2, default=float))
-    (out / "README.txt").write_text(
-        f"{brief.title}\n\nDrop {Path(files['master']).name} under your video. "
-        f"If your video has speech, use the .ducked.wav instead: it already sits under the voice.\n"
-        f"Import markers.csv or markers.edl for section and hit markers on your timeline.\n"
-        f"Stems are separate instrument layers if you want to remix.\n"
-        f"The .rb file is the Sonic Pi source: the code is the score.\n\nLicense: CC0. Use it for anything.\n")
+    # README.txt describes only the files this bundle actually contains.
+    lines = [brief.title, "", f"Drop {Path(files['master']).name} under your video."]
+    if "ducked" in files:
+        lines.append("If your video has speech, use the .ducked.wav instead: it already sits under the voice.")
+    lines.append("Import markers.csv or markers.edl for section and hit markers on your timeline.")
+    if any(k.startswith("stem_") for k in files):
+        lines.append("The .stem-*.wav files are separate instrument layers if you want to remix.")
+    if "source" in files:
+        lines.append("The .rb file is the Sonic Pi source: the code is the score.")
+    lines += ["", "License: CC0. Use it for anything."]
+    (out / "README.txt").write_text("\n".join(lines) + "\n")
     return manifest

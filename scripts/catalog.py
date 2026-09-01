@@ -5,7 +5,9 @@
     .venv/bin/python scripts/catalog.py --dry-run          # just write the briefs
 
 Each bed gets a deterministic seed, so any track can be regenerated exactly.
-Failures (gate or render) are logged and skipped; the batch keeps going.
+Failures (gate or render) are logged and skipped; the batch keeps going. If
+every bed in a run fails, the script exits non-zero so a broken environment
+(no Sonic Pi, no backend) cannot look like a successful run.
 """
 from __future__ import annotations
 
@@ -81,6 +83,7 @@ def main():
     plan = plan[: a.limit]
     log = out / "catalog-log.jsonl"
     print(f"{len(plan)} beds planned -> {out}  [collection {a.collection}]", file=sys.stderr)
+    shipped = failed = 0
     for b in plan:
         bp = out / "briefs" / f"{b.title}.json"
         b.save(bp)
@@ -89,25 +92,32 @@ def main():
         dest = out / b.title
         mf = dest / "manifest.json"
         if mf.exists() and json.loads(mf.read_text()).get("gate_passed"):
-            print(f"skip {b.title} (shipped)", file=sys.stderr); continue
+            print(f"skip {b.title} (shipped)", file=sys.stderr); shipped += 1; continue
         t0 = time.time()
         r = subprocess.run([sys.executable, "-m", "underscore.cli", "score", "--brief", str(bp),
                             "--engine", a.engine, "--llm", a.llm, "-o", str(dest)],
                            capture_output=True, text=True)
         ok = r.returncode == 0
-        stages = {}
+        stages, gate_reasons = {}, []
         mfp = dest / "manifest.json"
         if mfp.exists():
             try:
-                stages = json.loads(mfp.read_text()).get("stage_seconds", {})
+                m = json.loads(mfp.read_text())
+                stages = m.get("stage_seconds", {})
+                gate_reasons = m.get("gate_reasons", [])
             except json.JSONDecodeError:
-                stages = {}
+                pass
         rec = {"title": b.title, "ok": ok, "seconds": round(time.time() - t0, 1), "stages": stages,
-               "tail": r.stderr.strip().splitlines()[-3:]}
+               "gate_reasons": gate_reasons, "tail": r.stderr.strip().splitlines()[-3:]}
         with log.open("a") as f:
             f.write(json.dumps(rec) + "\n")
+        shipped += ok; failed += not ok
         detail = ", ".join(f"{k} {v}s" for k, v in stages.items() if k in ("compose", "recompose", "render"))
-        print(f"{'ok  ' if ok else 'FAIL'} {b.title}  ({rec['seconds']}s; {detail})", file=sys.stderr)
+        why = f"  [{'; '.join(gate_reasons)}]" if (not ok and gate_reasons) else ""
+        print(f"{'ok  ' if ok else 'FAIL'} {b.title}  ({rec['seconds']}s; {detail}){why}", file=sys.stderr)
+    if not a.dry_run and plan and shipped == 0:
+        print(f"every bed failed ({failed} of {len(plan)}); see {log}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -17,7 +17,7 @@ Each bed is one folder:
 | File | Purpose |
 |---|---|
 | `title.master.wav` | The finished bed, 48 kHz, 24-bit, -14 LUFS, with fades. |
-| `title.ducked.wav` | The same bed with volume automation baked in under the speech spans from the brief. Drop it under a voice track and it already sits in the right place. |
+| `title.ducked.wav` | Only when the brief has speech spans: the same bed with volume automation baked in under them. Drop it under a voice track and it already sits in the right place. |
 | `title.stem-*.wav` | Separate instrument layers, when the engine produces them. |
 | `title.preview.mp3` | A small file for auditioning. |
 | `title.rb` | The Sonic Pi program. The code is the score. |
@@ -45,12 +45,35 @@ The pipeline has six stages. Each one is a command, and `underscore score` runs 
 
 ## Quick start
 
+On Debian or Ubuntu, install two system packages first: `pedalboard` needs `libatomic.so.1`, and the MP3 preview and video mode need `ffmpeg` and `ffprobe` (the `ffmpeg` package provides both). Prefix with `sudo` if you are not root.
+
+```bash
+apt-get install -y libatomic1 ffmpeg
+```
+
+On macOS:
+
+<!-- rot: skip -->
+```bash
+brew install --cask sonic-pi   # required for real renders
+brew install ffmpeg
+```
+
+Then install and run the pipeline. The built-in synth engine needs no model and no Sonic Pi, so this works anywhere:
+
 ```bash
 python3 -m venv .venv && . .venv/bin/activate
 pip install -e '.[video]'
 
-underscore init my-video --duration 90        # writes my-video.brief.json
-underscore score --brief my-video.brief.json  # full pipeline, bundle in out/my-video
+underscore init my-video --duration 90                        # writes my-video.brief.json
+underscore score --brief my-video.brief.json --engine synth   # full pipeline, bundle in out/my-video
+```
+
+With Sonic Pi and a composing backend installed, drop `--engine synth` for real music, or start from a video:
+
+<!-- rot: skip -->
+```bash
+underscore score --brief my-video.brief.json  # compose with a model, render with Sonic Pi
 underscore score --video talk.mp4             # video mode
 underscore score --video talk.mp4 --offline-brief --llm ollama   # nothing leaves the machine
 ```
@@ -59,10 +82,11 @@ Individual stages are available as `analyze`, `compose`, `render`, `master`, and
 
 ## Requirements
 
-- macOS with Sonic Pi 5 installed (`brew install --cask sonic-pi`). Linux should work with the paths in `render.py` adjusted; this has not been tested yet.
 - Python 3.10 or newer.
-- `ffmpeg` for MP3 previews and video mode (`brew install ffmpeg`).
-- A composing backend: the Claude Code command line tool, an Anthropic API key, or Ollama with a local model.
+- **Sonic Pi 5.0 or newer, installed in `/Applications`, is a hard requirement for real renders.** The render is realtime and audible: a 90 second bed takes about 90 seconds of playback plus boot. Renders are macOS only today; on Linux the built-in synth engine runs the whole pipeline instead, and the Sonic Pi paths in `render.py` are untested (see the roadmap).
+- `ffmpeg` and `ffprobe` for MP3 previews and video mode (`brew install ffmpeg` on macOS; `apt-get install ffmpeg` on Debian and Ubuntu, which also needs `libatomic1` for the mastering chain).
+- A composing backend for real music: the Claude Code command line tool, an Anthropic API key, or Ollama with a local model. Composing is the slowest stage, typically one to three minutes per bed. The synth engine skips it.
+- Video mode downloads the faster-whisper `base` transcription model (about 75 MB) from the network on its first run and caches it; after that, analysis is fully local.
 
 ## The Sonic Pi render, in detail
 
@@ -72,10 +96,12 @@ Renders are audible while they run. The record tap sits before the output device
 
 ## Reproducibility
 
-Every bed records its seed, its brief, and its program. Re-rendering a program gives the same music:
+Every bed records its seed, its brief, and its program. Re-rendering a program gives the same music. A real bed from the published catalog is checked in under `examples/reproduce/`; on a Mac with Sonic Pi installed, this regenerates it exactly:
 
+<!-- rot: skip -->
 ```bash
-underscore score --brief brief.json --program out/track/track.rb --engine sonicpi
+underscore score --brief examples/reproduce/brief.json \
+  --program examples/reproduce/deep-dive-amin-60s-1109.rb --engine sonicpi
 ```
 
 Composing again from the same brief will produce different code, because the model is not deterministic. Keep the `.rb` file if you want the track back exactly.
@@ -111,8 +137,18 @@ Within a collection, each bed receives a deterministic instrument assignment fro
 
 ## The catalog
 
-`scripts/catalog.py` renders a matrix of beds (six profiles at 60, 90, and 120 seconds, rotating keys, fixed seeds) and `scripts/build_catalog_page.py` turns the results into a browsable page with players, measurements, and downloads. Failed beds are logged and retried on the next run.
+`scripts/catalog.py` renders a matrix of beds (six profiles at 60, 90, and 120 seconds, rotating keys, fixed seeds) and `scripts/build_catalog_page.py` turns the results into a browsable page with players, measurements, and downloads. Failed beds are logged with their gate reasons and retried on the next run; if every bed in a run fails, the script exits non-zero.
 
+A tiny demo of the same machinery, on the synth engine so it needs no model and no Sonic Pi:
+
+```bash
+.venv/bin/python scripts/catalog.py --out catalog-demo --collection glass --limit 2 --engine synth
+.venv/bin/python scripts/build_catalog_page.py --catalog catalog-demo
+```
+
+The real catalog runs on Sonic Pi, one realtime render at a time (the full 108-bed matrix takes about 7 hours):
+
+<!-- rot: skip -->
 ```bash
 .venv/bin/python scripts/catalog.py --out catalog --collection glass --limit 18
 .venv/bin/python scripts/build_catalog_page.py --catalog catalog   # groups by collection
@@ -139,6 +175,7 @@ tests/                      unit tests; the synth engine keeps them independent 
 ## Tests
 
 ```bash
+pip install -e '.[dev]'
 .venv/bin/python -m pytest -q tests
 ```
 

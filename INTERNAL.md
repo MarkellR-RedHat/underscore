@@ -6,12 +6,12 @@ and should describe only itself.
 
 ## Portfolio cut, September 1, 2026
 
-The family is five tools: **Ravenwise, Galley, Underscore, Backdrop, Rot.**
+The family is five tools: **Touchstone, Galley, Underscore, Backdrop, Rot.**
 
 - Inbox folds into Galley as an input: `galley topics <notes dir>` emits briefs. Not a repository.
 - Caption folds into Backdrop as its first stage: a timed, glossary-corrected transcript. SRT, chapters, and the description draft are exports of Backdrop, not a product.
 - Localize is dropped. If a second language is ever needed, it is a Galley output mode.
-- Walkthrough is deferred: the spec is kept, nothing is built, and it stays off the site until it has a first real use (the Ravenwise UI, 2027).
+- Walkthrough is deferred: the spec is kept, nothing is built, and it stays off the site until it has a first real use (the Touchstone UI, 2027).
 - The loop is **Galley -> Backdrop (+ Underscore) -> Rot -> back into Galley.** Rot's failures and people's questions both enter Galley as briefs.
 - Build order: finish Galley, then Backdrop, then Rot.
 - The inbox, caption, walkthrough, and localize repositories stay private as specs until Markell says archive or delete. Anything worth keeping from their READMEs was lifted into Galley and Backdrop first.
@@ -20,7 +20,7 @@ The family is five tools: **Ravenwise, Galley, Underscore, Backdrop, Rot.**
 
 | Tool | Role in the loop | Status |
 |---|---|---|
-| Ravenwise | Version verdicts for inference engines. The origin of the measured-verdict philosophy the others borrow. | built, launching 2027 |
+| Touchstone | Version verdicts for inference engines. The origin of the measured-verdict philosophy the others borrow. | built, launching 2027 |
 | Galley | Topic paragraph and reference folder in; sourced post, diagrams, and derivatives out, with citation, style, and brand gates. Takes topics from a notes directory (the former Inbox) and can emit a second language as an output mode (the former Localize). Stage (talks) is an output mode too. | in progress |
 | Underscore | Measured, public domain music beds for video. | built, catalog rendering |
 | Backdrop | Stage one is the timed, glossary-corrected transcript (the former Caption), exported as SRT, chapters, and a description draft. Then relevant animated clips from the words, sharing archetype geometry with Galley. | planned, next after Galley |
