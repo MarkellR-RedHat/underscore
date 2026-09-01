@@ -1,81 +1,125 @@
 # Underscore
 
-Code-generated, measured, CC0 background music for developer videos.
+Underscore makes background music for developer videos. You give it a short brief, or a video, and it returns a finished music bed: mastered to broadcast loudness, measured against what you asked for, and dedicated to the public domain. Every track ships with the source code that produced it, so anyone can regenerate or change it.
 
-Underscore turns a short brief (or a video) into a finished music bed: it asks
-your own Claude Code account to write Sonic Pi code, renders it, masters it to
-broadcast loudness, measures the result, and refuses to ship anything out of
-spec. Every track exports with stems, a speech-ducked mix, timeline markers,
-and the source code that made it. The output is public domain (CC0).
+It runs on your own machine with your own accounts. Nothing is hosted. The audio never leaves your computer, and in brief mode nothing else does either.
 
-It runs on your machine and your own accounts. Nothing is hosted.
+## Why it exists
 
-## Two modes, one generator
+Developer relations and content teams publish a steady stream of videos, and most of them need music under the voice. Commercial stock libraries come with license terms that many companies will not accept for published material, and reviewing each track's terms takes time nobody has. The usual result is silence, or the same three approved tracks in every video.
 
-- **Brief mode.** You describe what you need: duration, mood, energy curve,
-  hit points. Nothing leaves your machine except the brief text you wrote.
-- **Video mode.** Point it at a video. Scene cuts, transcript (faster-whisper),
-  and speech map (Whisper timestamps, WebRTC VAD as fallback) are extracted locally, a brief is derived, and the music changes where the
-  picture changes and ducks under the voice. For source material you cannot
-  share, use `--llm ollama` (fully local) or write the brief yourself.
+Underscore takes a different route. The music is written as code by a language model working from your brief, rendered on your hardware by Sonic Pi, mastered and checked by the pipeline, and released under CC0. A track made this way has no license terms for anyone to review. You can use it, your employer can use it, and so can anyone else.
 
-## Pipeline
+## What you get
 
-```
-analyze (video -> brief)   [optional, local: PySceneDetect + faster-whisper + VAD]
-compose (brief -> Sonic Pi code)   [Claude Code CLI | Anthropic API | Ollama]
-render  (code -> WAV 48k/24)       [Sonic Pi 5 headless recorder | built-in synth fallback]
-master  (WAV -> -14 LUFS, fades)   [pedalboard + pyloudnorm, optional matchering]
-measure (gate: loudness, peak, energy vs brief)   [librosa + pyloudnorm]
-export  (bundle: master, ducked, stems, mp3, markers, source, manifest)
-```
+Each bed is one folder:
+
+| File | Purpose |
+|---|---|
+| `title.master.wav` | The finished bed, 48 kHz, 24-bit, -14 LUFS, with fades. |
+| `title.ducked.wav` | The same bed with volume automation baked in under the speech spans from the brief. Drop it under a voice track and it already sits in the right place. |
+| `title.stem-*.wav` | Separate instrument layers, when the engine produces them. |
+| `title.preview.mp3` | A small file for auditioning. |
+| `title.rb` | The Sonic Pi program. The code is the score. |
+| `markers.csv`, `markers.edl` | Section and hit markers for the editing timeline. |
+| `brief.json` | Exactly what the generator was asked for. |
+| `manifest.json` | Seed, engine, every measurement, and the gate result. |
+| `LICENSE-CC0.txt` | The public domain dedication. |
+
+## How it works
+
+The pipeline has six stages. Each one is a command, and `underscore score` runs them all.
+
+1. **Analyze** (video mode only). Scene cuts are detected with PySceneDetect. Speech is located with faster-whisper, and its timestamps become the speech map; WebRTC VAD is the fallback when there is no transcript. A tempo is chosen so that bar lines land near the scene cuts. The result is a brief. This stage runs entirely on your machine.
+2. **Compose.** The brief is turned into a prompt, and a language model writes Sonic Pi code: one function per section, one per hit, all in key, built from an allowed set of synths and samples. The default backend is the Claude Code command line tool, so it uses a subscription you already have. The Anthropic API and Ollama are also supported. The code is validated (required functions present, no forbidden constructs, no helper names that collide with Sonic Pi's own API) and wrapped in a harness that sets tempo and seed and sequences the sections to an exact number of bars.
+3. **Render.** Sonic Pi 5 plays the program headlessly and records it. Rendering happens in real time: a 90 second bed takes about 90 seconds plus boot. A built-in synth engine can stand in when Sonic Pi is not available, so the rest of the pipeline stays testable. If Sonic Pi reports a runtime error, the errors are handed back to the model and the program is composed again once before the run is declared a failure.
+4. **Master.** A gentle chain (high-pass, compression, two shelves, light reverb), loudness normalization to the brief's target, a transparent peak limiter with true-peak headroom, and fades. With a reference track and `matchering` installed, the tonal balance is matched to the reference.
+5. **Measure.** Integrated loudness, true peak, loudness range, spectral centroid, and per-section onset density are computed. The gate refuses a bed whose loudness misses the target by more than 1 LU, whose true peak exceeds -1 dBTP, whose length is wrong, whose sections are silent, or whose energy curve does not follow the brief.
+6. **Export.** The bundle above is written. Beds that fail the gate are still written for inspection, but the manifest marks them as not shippable and the catalog page leaves them out.
+
+## Two ways to start
+
+**Brief mode.** You describe the music: duration, tempo, key, sections with a mood and an energy level, optional hit points, optional speech spans. `underscore init` writes a starter brief to edit. Nothing about your video is involved.
+
+**Video mode.** You point Underscore at a video. It derives the brief from the cuts and the speech, so the music changes where the picture changes and gets out of the way when someone is talking. With a language model backend, the transcript is used to assign moods and place hits. With `--offline-brief`, a heuristic does that instead and no model is called.
 
 ## Quick start
 
 ```bash
 python3 -m venv .venv && . .venv/bin/activate
 pip install -e '.[video]'
-underscore init my-video            # writes examples/brief.json to edit
-underscore score --brief brief.json # full pipeline
-underscore score --video talk.mp4   # video mode
+
+underscore init my-video --duration 90        # writes my-video.brief.json
+underscore score --brief my-video.brief.json  # full pipeline, bundle in out/my-video
+underscore score --video talk.mp4             # video mode
+underscore score --video talk.mp4 --offline-brief --llm ollama   # nothing leaves the machine
 ```
 
-Step zero on a new machine: `scripts/check-render.sh` tells you whether Sonic
-Pi headless rendering works. If it does not yet, the built-in synth engine
-(`--engine synth`) lets you exercise the entire pipeline today.
+Individual stages are available as `analyze`, `compose`, `render`, `master`, and `measure`. `scripts/check-render.sh` reports whether this machine can render with Sonic Pi.
 
-## How the Sonic Pi render works (no GUI)
+## Requirements
 
-Sonic Pi 5 ships a headless boot library. `vendor/underscore-record.rb` builds
-on it: boot the daemon and engine, start recording through the spider (the
-same path as the GUI's record button), run the program for the brief's
-duration, save the WAV, shut down. Rendering is realtime: a 90 s bed takes
-about 90 s plus a few seconds of boot. The harness holds the run open past the
-recording window because the engine pauses itself once every run completes.
+- macOS with Sonic Pi 5 installed (`brew install --cask sonic-pi`). Linux should work with the paths in `render.py` adjusted; this has not been tested yet.
+- Python 3.10 or newer.
+- `ffmpeg` for MP3 previews and video mode (`brew install ffmpeg`).
+- A composing backend: the Claude Code command line tool, an Anthropic API key, or Ollama with a local model.
 
-Re-render a take you like without asking the model again:
+## The Sonic Pi render, in detail
+
+Sonic Pi 5 ships a headless boot library. `vendor/underscore-record.rb` builds on it: it starts the daemon and audio engine, begins recording through the spider (the same path the application's record button uses), runs the program for the brief's duration, saves the WAV, and shuts down. Two details matter. The engine pauses itself as soon as every run has completed, so the harness keeps the run alive for several seconds past the end of the music. The first note can arrive a few seconds after recording starts on a fresh boot, so the recording window is longer than the brief and the pre-roll is trimmed afterwards.
+
+Renders are audible while they run. The record tap sits before the output device, so the system volume does not change what is written.
+
+## Reproducibility
+
+Every bed records its seed, its brief, and its program. Re-rendering a program gives the same music:
 
 ```bash
 underscore score --brief brief.json --program out/track/track.rb --engine sonicpi
 ```
 
-## Status
+Composing again from the same brief will produce different code, because the model is not deterministic. Keep the `.rb` file if you want the track back exactly.
 
-Day one. Built in the open at Rawlslab.
+## Data flow
+
+| Stage | Brief mode | Video mode, cloud model | Video mode, `--offline-brief` or Ollama |
+|---|---|---|---|
+| Analyze | not used | cuts, transcript, speech map computed locally | same |
+| Compose | brief text is sent to the model | brief plus transcript text and cut times are sent | nothing is sent |
+| Render, master, measure, export | local | local | local |
+
+Audio, video frames, and finished tracks never leave the machine in any mode. If the source footage is confidential, use the third column.
+
+## Using it at work
+
+Most people who want this tool want it for company videos. `docs/POLICY.md` walks through the questions that come up: who owns the music, why the output is CC0, what a company actually receives, how the data is handled, and the practical rules that keep personal and company work separate. The short version: compose on your own time and hardware if you want to own the catalog, release it under CC0, and your employer uses it the way it would use any public domain library. Read your own company's policy; this project is not legal advice.
 
 ## The catalog
 
-`scripts/catalog.py` renders a matrix of beds: six profiles (explainer, launch,
-demo, deep-dive, playful, keynote) at 60, 90, and 120 seconds, rotating keys,
-deterministic seeds. Every bed ships as a full bundle. Failures are logged to
-`catalog/catalog-log.jsonl` and skipped; rerunning resumes.
+`scripts/catalog.py` renders a matrix of beds (six profiles at 60, 90, and 120 seconds, rotating keys, fixed seeds) and `scripts/build_catalog_page.py` turns the results into a browsable page with players, measurements, and downloads. Failed beds are logged and retried on the next run.
 
 ```bash
 .venv/bin/python scripts/catalog.py --out catalog --limit 18
+.venv/bin/python scripts/build_catalog_page.py --catalog catalog
 ```
 
-Renders are audible while they run (the record tap is pre-device, so system
-volume does not change what gets written).
+## Project layout
+
+```
+src/underscore/
+  brief.py     the brief schema, validation, bar quantization, derivation helpers
+  analyze.py   video -> brief (cuts, transcript, speech map)
+  compose.py   brief -> Sonic Pi program (prompt, backends, validator, harness)
+  render.py    program -> WAV (Sonic Pi 5 headless, synth fallback)
+  master.py    mastering chain, loudness, limiter, fades, ducking
+  measure.py   measurements and the gate
+  export.py    the bundle
+  cli.py       the command line
+prompts/compose.md          the composing spec the model follows
+vendor/underscore-record.rb the headless recorder
+scripts/                    catalog batch, catalog page, render check
+tests/                      unit tests; the synth engine keeps them independent of Sonic Pi
+```
 
 ## Tests
 
@@ -83,13 +127,12 @@ volume does not change what gets written).
 .venv/bin/python -m pytest -q tests
 ```
 
-The synth engine makes the whole pipeline testable without Sonic Pi.
+## Roadmap
 
-## Catalog page
+- Stems from the Sonic Pi engine (one solo pass per layer).
+- Linux paths for the Sonic Pi render.
+- A published catalog page.
 
-```bash
-.venv/bin/python scripts/build_catalog_page.py --catalog catalog   # -> catalog/index.html
-```
+## License
 
-A playable index of every bed that passed the gate, with measurements and
-downloads. Beds the gate withheld are counted but not listed.
+Code: MIT. Music produced by the pipeline: CC0 1.0 (see `CATALOG-LICENSE.md`).
