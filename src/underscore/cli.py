@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -41,6 +42,8 @@ def cmd_compose(a):
 
 def cmd_render(a):
     from .render import render
+    if a.sonic_pi_app:
+        os.environ["UNDERSCORE_SONIC_PI_APP"] = a.sonic_pi_app
     brief = Brief.load(a.brief)
     program = Path(a.program).read_text() if a.program else None
     info = render(program, brief, a.out or f"{brief.title}.raw.wav", a.engine)
@@ -50,7 +53,7 @@ def cmd_render(a):
 def cmd_master(a):
     from .master import master, duck
     brief = Brief.load(a.brief)
-    info = master(a.wav, a.out or f"{brief.title}.master.wav", brief, a.reference)
+    info = master(a.wav, a.out or f"{brief.title}.master.wav", brief, a.reference, loop=a.loop)
     if brief.speech and not a.no_duck:
         info["ducked"] = duck(info["master"], Path(info["master"]).with_suffix(".ducked.wav"), brief.speech)
     _p(json.dumps(info, indent=2))
@@ -59,10 +62,65 @@ def cmd_master(a):
 def cmd_measure(a):
     from .measure import measure, gate
     brief = Brief.load(a.brief)
-    m = measure(a.wav, brief)
-    ok, reasons = gate(m, brief)
+    m = measure(a.wav, brief, loop=a.loop)
+    ok, reasons = gate(m, brief, loop_trim_s=0.5 if a.loop else 0.0)
     print(json.dumps({"passed": ok, "reasons": reasons, "measurements": m}, indent=2, default=float))
     sys.exit(0 if ok else 2)
+
+
+def cmd_doctor(a):
+    """Can this machine run the pipeline? Checks, one line each."""
+    import shutil as _sh
+    import sys as _sys
+    if a.sonic_pi_app:
+        os.environ["UNDERSCORE_SONIC_PI_APP"] = a.sonic_pi_app
+    ok = lambda s: print(f"  ✓ {s}")          # noqa: E731
+    no = lambda s: print(f"  ✗ {s}")          # noqa: E731
+    print("Underscore doctor")
+    v = _sys.version_info
+    (ok if v >= (3, 10) else no)(f"Python {v.major}.{v.minor}.{v.micro}" + ("" if v >= (3, 10) else "  (3.10+ required)"))
+    for tool, hint in (("ffmpeg", "brew install ffmpeg / apt-get install ffmpeg"),
+                       ("ffprobe", "comes with ffmpeg")):
+        (ok if _sh.which(tool) else no)(f"{tool}" + ("" if _sh.which(tool) else f"  ({hint})"))
+    try:
+        import pedalboard  # noqa: F401
+        ok("pedalboard imports (mastering chain ready)")
+    except Exception as e:  # noqa: BLE001
+        no(f"pedalboard import failed: {e}  (Debian/Ubuntu: apt-get install libatomic1)")
+    from .render import app_root, sonicpi_available, RECORDER
+    root = app_root()
+    if sonicpi_available():
+        ver = ""
+        plist = root / "Contents" / "Info.plist"
+        if plist.exists():
+            import re as _re
+            m = _re.search(r"CFBundleShortVersionString</key>\s*<string>([^<]+)", plist.read_text(errors="ignore"))
+            if m:
+                ver = f" {m.group(1)}"
+                if not m.group(1).startswith("5"):
+                    no(f"Sonic Pi{ver} at {root}: version 5.x required for headless render")
+                    ver = None
+        if ver is not None:
+            ok(f"Sonic Pi{ver} at {root} (headless boot library + recorder present)")
+    else:
+        no(f"Sonic Pi headless render unavailable at {root}  (brew install --cask sonic-pi, or set UNDERSCORE_SONIC_PI_APP; the synth engine still runs everything)")
+    if RECORDER.exists():
+        ok("bundled recorder present")
+    else:
+        no("bundled recorder missing (reinstall the package)")
+    cli_cmd = os.environ.get("UNDERSCORE_CLI")
+    if cli_cmd:
+        import shlex as _shlex
+        binname = _shlex.split(cli_cmd)[0]
+        (ok if _sh.which(binname) else no)(f"cli backend: UNDERSCORE_CLI = {cli_cmd!r}" + ("" if _sh.which(binname) else f"  ({binname} not on PATH)"))
+    else:
+        no("cli backend unconfigured: set UNDERSCORE_CLI (see README, Backends); only --engine synth works without one")
+    if os.environ.get("UNDERSCORE_API_URL"):
+        ok(f"api backend: UNDERSCORE_API_URL set" + ("" if os.environ.get("UNDERSCORE_MODEL") else "  (remember UNDERSCORE_MODEL or --model)"))
+    if os.environ.get("UNDERSCORE_LOCAL"):
+        ok("local backend: UNDERSCORE_LOCAL set")
+    free_gb = _sh.disk_usage(".").free / 1e9
+    (ok if free_gb > 2 else no)(f"{free_gb:.1f} GB free on this volume" + ("" if free_gb > 2 else "  (renders need room)"))
 
 
 def cmd_score(a):
@@ -73,6 +131,8 @@ def cmd_score(a):
     from .measure import measure, gate
     from .export import export_bundle
 
+    if a.sonic_pi_app:
+        os.environ["UNDERSCORE_SONIC_PI_APP"] = a.sonic_pi_app
     if a.video:
         from .analyze import brief_from_video
         brief, info = brief_from_video(a.video, a.title, a.llm if not a.offline_brief else None, a.model)
@@ -120,18 +180,18 @@ def cmd_score(a):
         rinfo = render(program, brief, work / f"{brief.title}.raw.wav", engine)
     timings["render"] = round(_time.perf_counter() - _t, 1); _t = _time.perf_counter()
     _p(f"render: {rinfo['engine']} -> {rinfo['raw']}" + (f"  (preroll {rinfo['preroll_s']}s)" if 'preroll_s' in rinfo else ""))
-    minfo = master(rinfo["raw"], work / f"{brief.title}.master.wav", brief, a.reference)
+    minfo = master(rinfo["raw"], work / f"{brief.title}.master.wav", brief, a.reference, loop=a.loop)
     ducked = duck(minfo["master"], work / f"{brief.title}.ducked.wav", brief.speech) if brief.speech else None
     timings["master"] = round(_time.perf_counter() - _t, 1); _t = _time.perf_counter()
-    m = measure(minfo["master"], brief)
-    ok, reasons = gate(m, brief)
+    m = measure(minfo["master"], brief, loop=a.loop)
+    ok, reasons = gate(m, brief, loop_trim_s=minfo.get("loop_trim_s", 0.0))
     timings["measure"] = round(_time.perf_counter() - _t, 1)
     _p(f"measure: {m['lufs_integrated']:.1f} LUFS, peak {m['true_peak_dbtp']:.2f} dBTP, "
        f"LRA {m['loudness_range_lu']:.1f} LU -> {'PASS' if ok else 'FAIL'}")
     for r in reasons:
         _p(f"  - {r}")
     outdir = Path(a.out or f"out/{brief.title}")
-    manifest = export_bundle(outdir, brief, program, rinfo, minfo, ducked, m, ok, reasons, timings)
+    manifest = export_bundle(outdir, brief, program, rinfo, minfo, ducked, m, ok, reasons, timings, loop=a.loop)
     _p(f"export: {outdir}  ({len(manifest['files'])} files)")
     _p("timing: " + " ".join(f"{k}={v}s" for k, v in timings.items()))
     if not ok and not a.ship_anyway:
@@ -155,15 +215,18 @@ def main(argv=None):
     s = sub.add_parser("init", help="write a starter brief"); s.add_argument("title"); s.add_argument("--duration", type=float, default=60.0); s.add_argument("-o", "--out"); s.set_defaults(fn=cmd_init)
     s = sub.add_parser("analyze", help="video -> brief (local)"); s.add_argument("video"); s.add_argument("--title"); s.add_argument("--llm", default=None, choices=[None, "cli", "api", "local"]); s.add_argument("--model"); s.add_argument("--no-transcript", action="store_true"); s.add_argument("-o", "--out"); s.set_defaults(fn=cmd_analyze)
     s = sub.add_parser("compose", help="brief -> Sonic Pi program"); s.add_argument("brief"); s.add_argument("--llm", default="cli", choices=["cli", "api", "local"]); s.add_argument("--model"); s.add_argument("-o", "--out"); s.set_defaults(fn=cmd_compose)
-    s = sub.add_parser("render", help="program -> raw WAV"); s.add_argument("--brief", required=True); s.add_argument("--program"); s.add_argument("--engine", default="auto", choices=["auto", "sonicpi", "synth"]); s.add_argument("-o", "--out"); s.set_defaults(fn=cmd_render)
-    s = sub.add_parser("master", help="raw WAV -> mastered bed"); s.add_argument("wav"); s.add_argument("--brief", required=True); s.add_argument("--reference"); s.add_argument("--no-duck", action="store_true"); s.add_argument("-o", "--out"); s.set_defaults(fn=cmd_master)
-    s = sub.add_parser("measure", help="measure + gate"); s.add_argument("wav"); s.add_argument("--brief", required=True); s.set_defaults(fn=cmd_measure)
+    s = sub.add_parser("render", help="program -> raw WAV"); s.add_argument("--brief", required=True); s.add_argument("--program"); s.add_argument("--engine", default="auto", choices=["auto", "sonicpi", "synth"]); s.add_argument("--sonic-pi-app", help="Sonic Pi application path (default /Applications/Sonic Pi.app)"); s.add_argument("-o", "--out"); s.set_defaults(fn=cmd_render)
+    s = sub.add_parser("master", help="raw WAV -> mastered bed"); s.add_argument("wav"); s.add_argument("--brief", required=True); s.add_argument("--reference"); s.add_argument("--no-duck", action="store_true"); s.add_argument("--loop", action="store_true", help="loop-safe: no fades, seam crossfaded for tiling"); s.add_argument("-o", "--out"); s.set_defaults(fn=cmd_master)
+    s = sub.add_parser("doctor", help="check this machine: renderer, tools, backends"); s.add_argument("--sonic-pi-app"); s.set_defaults(fn=cmd_doctor)
+    s = sub.add_parser("measure", help="measure + gate"); s.add_argument("wav"); s.add_argument("--brief", required=True); s.add_argument("--loop", action="store_true", help="the WAV is a loop-safe bed (seam check, trimmed duration)"); s.set_defaults(fn=cmd_measure)
     s = sub.add_parser("score", help="full pipeline: brief or video -> bundle")
     g = s.add_mutually_exclusive_group(required=True); g.add_argument("--brief"); g.add_argument("--video")
     s.add_argument("--title"); s.add_argument("--llm", default="cli", choices=["cli", "api", "local"]); s.add_argument("--model")
     s.add_argument("--offline-brief", action="store_true", help="video mode: derive the brief heuristically, no model call")
     s.add_argument("--engine", default="auto", choices=["auto", "sonicpi", "synth"]); s.add_argument("--reference")
     s.add_argument("--program", help="reuse an existing Sonic Pi program (skip compose)")
+    s.add_argument("--loop", action="store_true", help="loop-safe bed: no fades, seam crossfaded so the track tiles")
+    s.add_argument("--sonic-pi-app", help="Sonic Pi application path (default /Applications/Sonic Pi.app)")
     s.add_argument("--workdir"); s.add_argument("-o", "--out"); s.add_argument("--ship-anyway", action="store_true")
     s.set_defaults(fn=cmd_score)
 

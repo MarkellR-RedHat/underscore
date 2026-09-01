@@ -8,7 +8,8 @@
 ## for the whole window (the harness holds the run open), because the engine
 ## pauses itself when every run completes.
 
-BOOT = "/Applications/Sonic Pi.app/Contents/Resources/app/server/ruby/bin/headless_boot"
+APP = ENV["UNDERSCORE_SONIC_PI_APP"] || "/Applications/Sonic Pi.app"
+BOOT = File.join(APP, "Contents/Resources/app/server/ruby/bin/headless_boot")
 require BOOT
 require 'fileutils'
 

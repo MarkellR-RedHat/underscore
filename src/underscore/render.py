@@ -12,6 +12,7 @@ Two engines:
 from __future__ import annotations
 
 import math
+import os
 import subprocess
 import tempfile
 import time
@@ -35,27 +36,44 @@ class RenderError(RuntimeError):
 
 # ---------------------------------------------------------------- sonic pi --
 
-APP_SERVER = Path("/Applications/Sonic Pi.app/Contents/Resources/app/server")
-RUBY = APP_SERVER / "native" / "ruby" / "bin" / "ruby"
-BOOT_LIB = APP_SERVER / "ruby" / "bin" / "headless_boot.rb"
 RECORDER = Path(__file__).resolve().parent / "vendor" / "underscore-record.rb"
+
+
+def app_root() -> Path:
+    """The Sonic Pi application bundle. Override with UNDERSCORE_SONIC_PI_APP
+    (or --sonic-pi-app); the default is the macOS install location. The Linux
+    layout is unverified; see the README."""
+    return Path(os.environ.get("UNDERSCORE_SONIC_PI_APP", "/Applications/Sonic Pi.app"))
+
+
+def _app_server() -> Path:
+    return app_root() / "Contents" / "Resources" / "app" / "server"
+
+
+def _ruby() -> Path:
+    return _app_server() / "native" / "ruby" / "bin" / "ruby"
+
+
+def _boot_lib() -> Path:
+    return _app_server() / "ruby" / "bin" / "headless_boot.rb"
 
 
 def sonicpi_available() -> bool:
     """Sonic Pi 5 ships a headless boot library; our recorder builds on it."""
-    return RUBY.exists() and BOOT_LIB.exists() and RECORDER.exists()
+    return _ruby().exists() and _boot_lib().exists() and RECORDER.exists()
 
 
 def render_sonicpi(program: str, brief: Brief, out_wav: Path, tail: float = 12.0) -> dict:
     """tail covers the spider's start latency on a fresh boot (synth loading can
     delay the first note by several seconds) so the outro is never truncated."""
     if not sonicpi_available():
-        raise RuntimeError("Sonic Pi 5 not found at /Applications/Sonic Pi.app (brew install --cask sonic-pi)")
+        raise RuntimeError(f"Sonic Pi 5 not found at {app_root()} "
+                           "(brew install --cask sonic-pi, or set UNDERSCORE_SONIC_PI_APP)")
     out_wav.parent.mkdir(parents=True, exist_ok=True)
     rb = out_wav.with_suffix(".rb")
     rb.write_text(program)
     raw = out_wav.with_suffix(".sonicpi.wav")
-    cmd = [str(RUBY), str(RECORDER), "-o", str(raw), "-d", f"{brief.duration + tail:.2f}",
+    cmd = [str(_ruby()), str(RECORDER), "-o", str(raw), "-d", f"{brief.duration + tail:.2f}",
            "-f", str(rb), "-s", str(brief.seed)]
     proc = subprocess.run(cmd, capture_output=True, text=True, timeout=brief.duration + 120)
     log = proc.stdout + proc.stderr

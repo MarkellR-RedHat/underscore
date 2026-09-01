@@ -47,7 +47,7 @@ def write_markers(brief: Brief, outdir: Path) -> list[str]:
 def export_bundle(outdir: str | Path, brief: Brief, program: str | None,
                   render_info: dict, master_info: dict, ducked: str | None,
                   measurements: dict, passed: bool, reasons: list[str],
-                  timings: dict | None = None) -> dict:
+                  timings: dict | None = None, loop: bool = False) -> dict:
     out = Path(outdir)
     out.mkdir(parents=True, exist_ok=True)
     files: dict[str, str] = {}
@@ -76,6 +76,7 @@ def export_bundle(outdir: str | Path, brief: Brief, program: str | None,
         "engine": render_info.get("engine"),
         "render_errors": render_info.get("sonicpi_errors", []),
         "seed": brief.seed,
+        "loop": loop,
         "gate_passed": passed,
         "gate_reasons": reasons,
         "stage_seconds": timings or {},

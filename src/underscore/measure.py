@@ -21,7 +21,7 @@ def _true_peak_dbtp(y: np.ndarray, sr: int) -> float:
     return 20 * np.log10(peak)
 
 
-def measure(wav: str | Path, brief: Brief) -> dict:
+def measure(wav: str | Path, brief: Brief, loop: bool = False) -> dict:
     import librosa
     import pyloudnorm as pyln
     y, sr = sf.read(wav, always_2d=True, dtype="float64")
@@ -60,7 +60,7 @@ def measure(wav: str | Path, brief: Brief) -> dict:
         if req.std() > 0 and got.std() > 0:
             corr = float(np.corrcoef(req, got)[0, 1])
 
-    return {
+    out = {
         "duration_s": len(y) / sr,
         "sample_rate": sr,
         "lufs_integrated": lufs,
@@ -70,16 +70,28 @@ def measure(wav: str | Path, brief: Brief) -> dict:
         "energy_correlation": corr,
         "sections": sections,
     }
+    if loop:
+        # the tile point: the last 50 ms must hand off to the first 50 ms
+        w = max(1, int(0.05 * sr))
+        def _rms_db(seg):
+            r = float(np.sqrt(np.mean(seg ** 2)))
+            return 20 * np.log10(r) if r > 0 else -120.0
+        out["loop_seam_db"] = abs(_rms_db(mono[:w]) - _rms_db(mono[-w:]))
+    return out
 
 
-def gate(m: dict, brief: Brief, lufs_tolerance: float = 1.0) -> tuple[bool, list[str]]:
+def gate(m: dict, brief: Brief, lufs_tolerance: float = 1.0,
+         loop_trim_s: float = 0.0) -> tuple[bool, list[str]]:
     reasons: list[str] = []
     if abs(m["lufs_integrated"] - brief.target_lufs) > lufs_tolerance:
         reasons.append(f"loudness {m['lufs_integrated']:.1f} LUFS, target {brief.target_lufs:.1f} ±{lufs_tolerance}")
     if m["true_peak_dbtp"] > -1.0:
         reasons.append(f"true peak {m['true_peak_dbtp']:.2f} dBTP exceeds -1.0")
-    if abs(m["duration_s"] - brief.duration) > 0.25:
-        reasons.append(f"duration {m['duration_s']:.2f}s, brief {brief.duration:.2f}s")
+    expected = brief.duration - loop_trim_s
+    if abs(m["duration_s"] - expected) > 0.25:
+        reasons.append(f"duration {m['duration_s']:.2f}s, expected {expected:.2f}s")
+    if m.get("loop_seam_db") is not None and m["loop_seam_db"] > 6.0:
+        reasons.append(f"loop seam mismatch: first and last 50 ms differ by {m['loop_seam_db']:.1f} dB (> 6.0)")
     for s in m["sections"]:
         if s["rms_dbfs"] < -45:
             reasons.append(f"section {s['start']:.1f}-{s['end']:.1f}s is effectively silent ({s['rms_dbfs']:.0f} dBFS)")

@@ -78,7 +78,11 @@ underscore score --video talk.mp4             # video mode
 underscore score --video talk.mp4 --offline-brief --llm local   # nothing leaves the machine
 ```
 
-Individual stages are available as `analyze`, `compose`, `render`, `master`, and `measure`. `scripts/check-render.sh` reports whether this machine can render with Sonic Pi.
+Individual stages are available as `analyze`, `compose`, `render`, `master`, and `measure`. `underscore doctor` reports whether this machine can render with Sonic Pi and which composing backends are configured.
+
+For music that repeats cleanly, `underscore score --loop` produces a tileable bed: no fades, the seam crossfaded so the last moment flows into the first, and the gate checks the tile point. The bed comes out half a second shorter than the brief (the crossfade), and the manifest records `loop: true`.
+
+Sonic Pi is looked for at `/Applications/Sonic Pi.app`; point `UNDERSCORE_SONIC_PI_APP` (or `--sonic-pi-app`) somewhere else to override. The headless render is verified on macOS only; on Linux the override exists but the Sonic Pi 5 layout there is unverified, and the synth engine is the supported path.
 
 ## Requirements
 
