@@ -12,6 +12,10 @@
 #      synth engine, and confirm the gate passed in the manifest.
 #   4. Print a one-line verdict for FEATURES.md.
 #
+#   A trap worth knowing for any script of this shape: under `set -o pipefail`, a pipeline like
+#   `unzip -l file | grep -q pattern` reports failure when the pattern MATCHES, because grep exits early,
+#   closes the pipe, and unzip dies of SIGPIPE. Capture the listing to a file first, then grep the file.
+#
 # Read-only against this repository and against GitHub. Nothing is pushed, no repository is renamed.
 # Exit 0 only when every step passed.
 set -uo pipefail

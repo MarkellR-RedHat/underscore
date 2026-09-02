@@ -1,2 +1,4 @@
 # written by rot: full block logs are artifacts, not history
 runs/
+# cached upstream release feeds, including their release notes
+radar/cache/
