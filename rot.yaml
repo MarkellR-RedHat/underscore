@@ -1,0 +1,27 @@
+# rot.yaml for the Underscore documents. Rot replays the README's and the demo's command blocks in a fresh
+# container. The synth engine needs no model and no Sonic Pi, so every unskipped block runs anywhere; blocks that
+# need Sonic Pi or a composing backend carry <!-- rot: skip -->. libatomic1 is for pedalboard, ffmpeg for previews.
+# The checkout is copied into /work first (the README installs from '.'); once the repository is public the clone
+# block takes over and that copy line goes.
+image: python:3.12-slim
+engine: docker
+sources:
+  - "README.md"
+  - "docs/DEMO.md"
+exclude:
+  - ".rot/**"
+  - ".git/**"
+  - ".venv/**"
+  - "out/**"
+  - "catalog/**"
+network: true
+timeout: 900
+setup:
+  - apt-get update -qq >/dev/null && apt-get install -y -qq libatomic1 ffmpeg >/dev/null 2>&1
+  - cp -r /src/. /work/ 2>/dev/null; rm -rf /work/.venv /work/.rot /work/out /work/catalog-demo
+  - pip install -q '/work[dev]' >/dev/null 2>&1
+probe:
+  - python3 --version
+  - ffmpeg -version | head -1
+  - python3 -c "import importlib.metadata as m; print('rawlslab-underscore', m.version('rawlslab-underscore'))"
+retries: 0

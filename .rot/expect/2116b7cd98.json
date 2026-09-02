@@ -1,0 +1,50 @@
+{
+ "doc": "docs/DEMO.md",
+ "blocks": {
+  "9181ccd6bfe3": {
+   "ordinal": 1,
+   "line": 7,
+   "kind": "shell",
+   "exit_code": 0,
+   "output": "wrote demo.brief.json (edit moods, energies, hits, speech; then: underscore score --brief demo.brief.json)",
+   "files": {},
+   "recorded_at": "2026-09-02T02:58:26Z",
+   "probes": {
+    "python3 --version": "Python 3.12.14",
+    "ffmpeg -version | head -1": "ffmpeg version 7.1.5-0+deb13u1 Copyright (c) 2000-2026 the FFmpeg developers",
+    "python3 -c \"import importlib.metadata as m; print('rawlslab-underscore', m.version('rawlslab-underscore'))\"": "rawlslab-underscore 0.1.0rc1"
+   }
+  },
+  "5a4537182a2c": {
+   "ordinal": 2,
+   "line": 13,
+   "kind": "shell",
+   "exit_code": 0,
+   "output": "render: synth -> .underscore/demo/demo.raw.wav\nmeasure: -14.0 LUFS, peak -1.50 dBTP, LRA 3.0 LU -> PASS\nexport: out/demo (8 files)\ntiming: compose=<masked> render=<masked> master=<masked> measure=<masked>",
+   "files": {},
+   "recorded_at": "2026-09-02T02:58:26Z",
+   "probes": {
+    "python3 --version": "Python 3.12.14",
+    "ffmpeg -version | head -1": "ffmpeg version 7.1.5-0+deb13u1 Copyright (c) 2000-2026 the FFmpeg developers",
+    "python3 -c \"import importlib.metadata as m; print('rawlslab-underscore', m.version('rawlslab-underscore'))\"": "rawlslab-underscore 0.1.0rc1"
+   }
+  },
+  "c1429a1e66d5": {
+   "ordinal": 3,
+   "line": 19,
+   "kind": "shell",
+   "exit_code": 0,
+   "output": "gate_passed True | -14.0 LUFS",
+   "files": {},
+   "recorded_at": "2026-09-02T02:58:26Z",
+   "probes": {
+    "python3 --version": "Python 3.12.14",
+    "ffmpeg -version | head -1": "ffmpeg version 7.1.5-0+deb13u1 Copyright (c) 2000-2026 the FFmpeg developers",
+    "python3 -c \"import importlib.metadata as m; print('rawlslab-underscore', m.version('rawlslab-underscore'))\"": "rawlslab-underscore 0.1.0rc1"
+   }
+  }
+ },
+ "title": "Underscore in twenty seconds",
+ "schema": 1,
+ "masks": "92df81bf2055"
+}

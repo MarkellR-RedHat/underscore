@@ -1,0 +1,153 @@
+{
+ "verdict": {
+  "doc": "README.md",
+  "title": "Underscore",
+  "status": "fresh",
+  "blocks": [
+   {
+    "id": "66fa29d6780e",
+    "ordinal": 1,
+    "line": 55,
+    "status": "works",
+    "detail": "",
+    "exit_code": 0,
+    "expected_exit": 0,
+    "output_diff": [],
+    "output_tail": "",
+    "flaky": false,
+    "duration_ms": 508
+   },
+   {
+    "id": "a4b290ac92ee",
+    "ordinal": 2,
+    "line": 62,
+    "status": "skipped",
+    "detail": "",
+    "exit_code": null,
+    "expected_exit": null,
+    "output_diff": [],
+    "output_tail": "",
+    "flaky": false,
+    "duration_ms": null
+   },
+   {
+    "id": "2049757c1c2e",
+    "ordinal": 3,
+    "line": 69,
+    "status": "output differs",
+    "detail": "same exit code, different output (nothing documented; informational)",
+    "exit_code": 0,
+    "expected_exit": 0,
+    "output_diff": [
+     "@@ -178,3 +178,3 @@",
+     "  Building editable for rawlslab-underscore (pyproject.toml): finished with status 'done'",
+     "- Created wheel for rawlslab-underscore: filename=rawlslab_underscore-0.1.0rc1-0.editable-py3-none-any.whl size=9451 sha256=<masked>",
+     "+ Created wheel for rawlslab-underscore: filename=rawlslab_underscore-0.1.0rc1-0.editable-py3-none-any.whl size=9699 sha256=<masked>",
+     "  Stored in directory: <masked><masked>"
+    ],
+    "output_tail": "",
+    "flaky": false,
+    "duration_ms": 20340
+   },
+   {
+    "id": "0a5c2de6d96f",
+    "ordinal": 4,
+    "line": 80,
+    "status": "skipped",
+    "detail": "",
+    "exit_code": null,
+    "expected_exit": null,
+    "output_diff": [],
+    "output_tail": "",
+    "flaky": false,
+    "duration_ms": null
+   },
+   {
+    "id": "94360ed25c0c",
+    "ordinal": 5,
+    "line": 117,
+    "status": "skipped",
+    "detail": "",
+    "exit_code": null,
+    "expected_exit": null,
+    "output_diff": [],
+    "output_tail": "",
+    "flaky": false,
+    "duration_ms": null
+   },
+   {
+    "id": "8543dca08b5a",
+    "ordinal": 6,
+    "line": 135,
+    "status": "skipped",
+    "detail": "",
+    "exit_code": null,
+    "expected_exit": null,
+    "output_diff": [],
+    "output_tail": "",
+    "flaky": false,
+    "duration_ms": null
+   },
+   {
+    "id": "92c46b61fce7",
+    "ordinal": 7,
+    "line": 177,
+    "status": "works",
+    "detail": "",
+    "exit_code": 0,
+    "expected_exit": 0,
+    "output_diff": [],
+    "output_tail": "",
+    "flaky": false,
+    "duration_ms": 6367
+   },
+   {
+    "id": "ab78eadf745c",
+    "ordinal": 8,
+    "line": 185,
+    "status": "skipped",
+    "detail": "",
+    "exit_code": null,
+    "expected_exit": null,
+    "output_diff": [],
+    "output_tail": "",
+    "flaky": false,
+    "duration_ms": null
+   },
+   {
+    "id": "6460783e9cf0",
+    "ordinal": 9,
+    "line": 212,
+    "status": "output differs",
+    "detail": "same exit code, different output (nothing documented; informational)",
+    "exit_code": 0,
+    "expected_exit": 0,
+    "output_diff": [
+     "@@ -54,3 +54,3 @@",
+     "  Building editable for rawlslab-underscore (pyproject.toml): finished with status 'done'",
+     "- Created wheel for rawlslab-underscore: filename=rawlslab_underscore-0.1.0rc1-0.editable-py3-none-any.whl size=9451 sha256=<masked>",
+     "+ Created wheel for rawlslab-underscore: filename=rawlslab_underscore-0.1.0rc1-0.editable-py3-none-any.whl size=9699 sha256=<masked>",
+     "  Stored in directory: <masked><masked>"
+    ],
+    "output_tail": "",
+    "flaky": false,
+    "duration_ms": 8343
+   }
+  ],
+  "first_failure": null
+ },
+ "run": {
+  "at": "2026-09-02T03:05:45Z",
+  "image": "python:3.12-slim",
+  "engine": "docker",
+  "probes": {
+   "python3 --version": "Python 3.12.14",
+   "ffmpeg -version | head -1": "ffmpeg version 7.1.5-0+deb13u1 Copyright (c) 2000-2026 the FFmpeg developers",
+   "python3 -c \"import importlib.metadata as m; print('rawlslab-underscore', m.version('rawlslab-underscore'))\"": "rawlslab-underscore 0.1.0rc1"
+  },
+  "error": null,
+  "timed_out": false
+ },
+ "stale_since": null,
+ "releases": []
+}

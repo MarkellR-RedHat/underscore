@@ -1,0 +1,27 @@
+{
+ "at": "2026-09-02T03:05:45Z",
+ "documents": [
+  {
+   "doc": "README.md",
+   "title": "Underscore",
+   "status": "fresh",
+   "stale_since": null,
+   "counts": {
+    "works": 2,
+    "skipped": 5,
+    "output differs": 2
+   },
+   "first_failure": null
+  },
+  {
+   "doc": "docs/DEMO.md",
+   "title": "Underscore in twenty seconds",
+   "status": "fresh",
+   "stale_since": null,
+   "counts": {
+    "works": 3
+   },
+   "first_failure": null
+  }
+ ]
+}

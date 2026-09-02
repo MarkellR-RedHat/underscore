@@ -1,0 +1,92 @@
+name: Rot
+
+# Replays the code in this repository's documents in a fresh container every
+# Monday, commits the results and badges, and keeps one issue open per stale
+# document until it is fresh again. Written by `rot init --github-action`.
+# Needs nothing beyond the repository's own token; Docker is present on
+# ubuntu-latest. Expectations live in .rot/expect and are committed; the first
+# run records them.
+
+on:
+  push:
+    branches: [master]
+  pull_request:              # a PR that breaks a document fails the check, with the block's line annotated
+  schedule:
+    - cron: "0 12 * * 1"     # Mondays 12:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: rot
+  cancel-in-progress: false
+
+jobs:
+  rot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # Rot is on TestPyPI until launch morning; swap to `pip install -q rawlslab-rot` when it is on PyPI.
+      - run: pip install -q -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ 'rawlslab-rot==0.1.0rc2'
+      - name: Replay
+        id: run
+        run: rot run --strict --annotate
+        continue-on-error: true
+      - name: Record expectations for blocks that are new
+        if: github.event_name != 'pull_request'
+        run: rot record
+      - name: llms.txt with a verified-on date per document
+        if: github.event_name != 'pull_request'
+        run: rot llms
+      - name: Radar
+        if: github.event_name != 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: rot radar
+      - name: Commit results and badges
+        if: github.event_name != 'pull_request'
+        run: |
+          git config user.name "MarkellRawls"
+          git config user.email "markell.rawls@yahoo.com"
+          if git check-ignore -q .rot; then echo "::warning::.rot/ is ignored by .gitignore, so results and badges cannot be committed"; exit 0; fi
+          git add .rot llms.txt             # .rot/.gitignore keeps the full block logs (runs/) out
+          git diff --cached --quiet && exit 0
+          git commit -q -m "Rot: $(date -u +%Y-%m-%d)"
+          git pull -q --rebase && git push -q
+      - name: One issue per stale document
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh label create rot --color d92552 --description "A document whose code no longer runs" 2>/dev/null || true
+          rot report --json > /tmp/rot-report.json
+          n=$(jq '.documents | length' /tmp/rot-report.json)
+          for i in $(seq 0 $((n - 1))); do
+            doc=$(jq -r ".documents[$i].doc" /tmp/rot-report.json)
+            status=$(jq -r ".documents[$i].status" /tmp/rot-report.json)
+            since=$(jq -r ".documents[$i].stale_since // \"\" | .[0:10]" /tmp/rot-report.json)
+            first=$(jq -r ".documents[$i].first_failure // \"\"" /tmp/rot-report.json)
+            prefix="Rot: $doc is stale"
+            existing=$(gh issue list --state open --label rot --json number,title --jq ".[] | select(.title | startswith(\"$prefix\")) | .number" | head -1)
+            report=".rot/reports/$(printf '%s' "$doc" | sed 's|/|__|g').md"
+            if [ "$status" = "stale" ]; then
+              body=$(printf 'Stale since %s. First failure: %s.\n\nRun: %s\n\n' "$since" "$first" "$RUN_URL"; head -c 60000 "$report")
+              if [ -n "$existing" ]; then
+                gh issue comment "$existing" --body "$body" >/dev/null
+              else
+                gh issue create --title "$prefix since $since" --label rot --body "$body" >/dev/null
+              fi
+            elif [ -n "$existing" ]; then
+              gh issue close "$existing" --comment "Fresh again on $(date -u +%Y-%m-%d). Run: $RUN_URL" >/dev/null
+            fi
+          done
+      - name: Verdict
+        if: always()
+        run: |
+          if [ "${{ steps.run.outcome }}" = "failure" ]; then echo "::warning::something is stale; see the issues labeled rot"; exit 1; fi

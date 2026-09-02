@@ -1,0 +1,63 @@
+{
+ "verdict": {
+  "doc": "docs/DEMO.md",
+  "title": "Underscore in twenty seconds",
+  "status": "fresh",
+  "blocks": [
+   {
+    "id": "9181ccd6bfe3",
+    "ordinal": 1,
+    "line": 7,
+    "status": "works",
+    "detail": "",
+    "exit_code": 0,
+    "expected_exit": 0,
+    "output_diff": [],
+    "output_tail": "",
+    "flaky": false,
+    "duration_ms": 23
+   },
+   {
+    "id": "5a4537182a2c",
+    "ordinal": 2,
+    "line": 13,
+    "status": "works",
+    "detail": "",
+    "exit_code": 0,
+    "expected_exit": 0,
+    "output_diff": [],
+    "output_tail": "",
+    "flaky": false,
+    "duration_ms": 3672
+   },
+   {
+    "id": "c1429a1e66d5",
+    "ordinal": 3,
+    "line": 19,
+    "status": "works",
+    "detail": "",
+    "exit_code": 0,
+    "expected_exit": 0,
+    "output_diff": [],
+    "output_tail": "",
+    "flaky": false,
+    "duration_ms": 9
+   }
+  ],
+  "first_failure": null
+ },
+ "run": {
+  "at": "2026-09-02T03:05:45Z",
+  "image": "python:3.12-slim",
+  "engine": "docker",
+  "probes": {
+   "python3 --version": "Python 3.12.14",
+   "ffmpeg -version | head -1": "ffmpeg version 7.1.5-0+deb13u1 Copyright (c) 2000-2026 the FFmpeg developers",
+   "python3 -c \"import importlib.metadata as m; print('rawlslab-underscore', m.version('rawlslab-underscore'))\"": "rawlslab-underscore 0.1.0rc1"
+  },
+  "error": null,
+  "timed_out": false
+ },
+ "stale_since": null,
+ "releases": []
+}

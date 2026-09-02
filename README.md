@@ -207,6 +207,10 @@ scripts/               catalog batch, catalog page + index, render check
 tests/                 unit tests; the synth engine keeps them independent of Sonic Pi
 ```
 
+## Twenty seconds of it
+
+`docs/DEMO.md` is the shortest complete run: a starter brief, the whole pipeline on the synth engine, the gate's verdict read back. Rot replays it in a clean container on every push and records the run as `docs/demo.cast` (asciicast v2, 16 seconds), which any terminal player replays.
+
 ## Tests
 
 ```bash
