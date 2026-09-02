@@ -33,7 +33,7 @@ Each bed is one folder:
 The pipeline has six stages. Each one is a command, and `underscore score` runs them all.
 
 1. **Analyze** (video mode only). Scene cuts are detected with PySceneDetect. Speech is located with faster-whisper, and its timestamps become the speech map; WebRTC VAD is the fallback when there is no transcript. A tempo is chosen so that bar lines land near the scene cuts. The result is a brief. This stage runs entirely on your machine.
-2. **Compose.** The brief is turned into a prompt, and a language model writes Sonic Pi code: one function per section, one per hit, all in key, built from an allowed set of synths and samples. The model is yours, reached through one of three seams: a command-line agent you already run, a chat-completions HTTP endpoint, or a local model runner (see Backends). The code is validated (required functions present, no forbidden constructs, no helper names that collide with Sonic Pi's own API) and wrapped in a harness that sets tempo and seed and sequences the sections to an exact number of bars.
+2. **Compose.** The brief is turned into a prompt, and a language model writes Sonic Pi code: one function per section, one per hit, all in key, built from an allowed set of synths and samples. The model is yours, reached through one of three seams: a command-line agent you already run, a chat-completions HTTP endpoint, or a local model runner (see Backends). The code is validated (required functions present, no forbidden constructs, no helper names that collide with Sonic Pi's own API) and wrapped in a fixed outer program that sets tempo and seed and sequences the sections to an exact number of bars.
 3. **Render.** Sonic Pi 5 plays the program headlessly and records it. Rendering happens in real time: a 90 second bed takes about 90 seconds plus boot. A built-in synth engine can stand in when Sonic Pi is not available, so the rest of the pipeline stays testable. If Sonic Pi reports a runtime error, the errors are handed back to the model and the program is composed again once before the run is declared a failure.
 4. **Master.** A gentle chain (high-pass, compression, two shelves, light reverb), loudness normalization to the brief's target, a transparent peak limiter with true-peak headroom, and fades. With a reference track and `matchering` installed, the tonal balance is matched to the reference.
 5. **Measure.** Integrated loudness, true peak, loudness range, spectral centroid, and per-section onset density are computed. The gate refuses a bed whose loudness misses the target by more than 1 LU, whose true peak exceeds -1 dBTP, whose length is wrong, whose sections are silent, or whose energy curve does not follow the brief.
@@ -108,11 +108,11 @@ Underscore does not bundle a model or default to a vendor; it drives whatever yo
 | `api` | A chat-completions style HTTP endpoint. | `UNDERSCORE_API_URL`, a model via `--model` or `UNDERSCORE_MODEL`, and optionally `UNDERSCORE_API_KEY` (sent as a bearer token). |
 | `local` | The same command seam as `cli`, for a local model runner, so source material never leaves the machine. | `UNDERSCORE_LOCAL`, falling back to `UNDERSCORE_CLI`. |
 
-For example, with the Claude Code command line tool:
+For example, with a command-line agent that reads a prompt on stdin and prints its reply on stdout:
 
 <!-- rot: skip -->
 ```bash
-export UNDERSCORE_CLI="claude -p --output-format text"
+export UNDERSCORE_CLI="your-agent --print --plain"   # the agent command with its non-interactive flags
 underscore score --brief my-video.brief.json
 ```
 
@@ -120,7 +120,7 @@ Any command that reads a prompt on stdin and prints the code on stdout works the
 
 ## The Sonic Pi render, in detail
 
-Sonic Pi 5 ships a headless boot library. `vendor/underscore-record.rb` builds on it: it starts the daemon and audio engine, begins recording through the spider (the same path the application's record button uses), runs the program for the brief's duration, saves the WAV, and shuts down. Two details matter. The engine pauses itself as soon as every run has completed, so the harness keeps the run alive for several seconds past the end of the music. The first note can arrive a few seconds after recording starts on a fresh boot, so the recording window is longer than the brief and the pre-roll is trimmed afterwards.
+Sonic Pi 5 ships a headless boot library. `vendor/underscore-record.rb` builds on it: it starts the daemon and audio engine, begins recording through the spider (the same path the application's record button uses), runs the program for the brief's duration, saves the WAV, and shuts down. Two details matter. The engine pauses itself as soon as every run has completed, so the recorder keeps the run alive for several seconds past the end of the music. The first note can arrive a few seconds after recording starts on a fresh boot, so the recording window is longer than the brief and the pre-roll is trimmed afterwards.
 
 Renders are audible while they run. The record tap sits before the output device, so the system volume does not change what is written.
 
@@ -186,11 +186,11 @@ The real catalog runs on Sonic Pi, one realtime render at a time (the full 108-b
 
 ## Project layout
 
-```
+```text
 src/underscore/
   brief.py     the brief schema, validation, bar quantization, derivation helpers
   analyze.py   video -> brief (cuts, transcript, speech map)
-  compose.py   brief -> Sonic Pi program (prompt, backends, validator, harness)
+  compose.py   brief -> Sonic Pi program (prompt, backends, validator, outer program)
   render.py    program -> WAV (Sonic Pi 5 headless, synth fallback)
   master.py    mastering chain, loudness, limiter, fades, ducking
   measure.py   measurements and the gate
