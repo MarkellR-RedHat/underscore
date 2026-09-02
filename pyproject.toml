@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rawlslab-underscore"
-version = "0.1.0"
+version = "0.1.0rc1"
 description = "Code-generated, measured, CC0 background music for developer videos. Runs on your machine, with a model account you already have."
 readme = "README.md"
 requires-python = ">=3.10"

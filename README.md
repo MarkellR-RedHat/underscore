@@ -218,3 +218,7 @@ pip install -e '.[dev]'
 ## License
 
 Code: MIT. Music produced by the pipeline: CC0 1.0 (see `CATALOG-LICENSE.md`).
+
+## Trademarks
+
+RawlsLab and the name Underscore identify this project and its publisher, RawlsLab LLC. The open-source license covers the code, not the names. Say that your work uses or builds on Underscore; please do not name your own product or service with these names or anything confusingly similar, and do not imply the lab's endorsement.
