@@ -53,7 +53,7 @@ The pipeline has six stages. Each one is a command, and `underscore score` runs 
 On Debian or Ubuntu, install two system packages first: `pedalboard` needs `libatomic.so.1`, and the MP3 preview and video mode need `ffmpeg` and `ffprobe` (the `ffmpeg` package provides both). Prefix with `sudo` if you are not root.
 
 ```bash
-apt-get install -y libatomic1 ffmpeg
+apt-get install -y -qq libatomic1 ffmpeg >/dev/null
 ```
 
 On macOS:
