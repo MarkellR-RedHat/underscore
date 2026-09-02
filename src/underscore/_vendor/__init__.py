@@ -1,4 +1,4 @@
-# Vendored from rawlslab-core 64f6302 (2026-09-01). Do not edit here; change MarkellRawls/core and re-run scripts/vendor.py.
+# Vendored from rawlslab-core 3e2563e (2026-09-01). Do not edit here; change MarkellRawls/core and re-run scripts/vendor.py.
 """The RawlsLab shared core.
 
 Modules are vendored into each tool by scripts/vendor.py, never installed as a

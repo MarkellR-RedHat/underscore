@@ -1,4 +1,4 @@
-# Vendored from rawlslab-core 64f6302 (2026-09-01). Do not edit here; change MarkellRawls/core and re-run scripts/vendor.py.
+# Vendored from rawlslab-core 3e2563e (2026-09-01). Do not edit here; change MarkellRawls/core and re-run scripts/vendor.py.
 """The gate skeleton every tool runs: named checks whose failures are counted, reported, and never quietly shipped.
 
 Extracted from the gate running in Galley (style, citations, consistency,

@@ -1,4 +1,4 @@
-# Vendored from rawlslab-core 64f6302 (2026-09-01). Do not edit here; change MarkellRawls/core and re-run scripts/vendor.py.
+# Vendored from rawlslab-core 3e2563e (2026-09-01). Do not edit here; change MarkellRawls/core and re-run scripts/vendor.py.
 """Brief schemas: the content brief (Galley) and the music brief (Underscore).
 
 These are different documents describing different work, and this module does
@@ -36,12 +36,20 @@ class BriefError(ValueError):
         super().__init__(f"{path}: " + "; ".join(errors))
 
 
-def split_frontmatter(text: str) -> tuple[dict, str]:
-    """YAML frontmatter and the body below it; ({}, text) when there is none."""
+def split_frontmatter(text: str, path: str = "<text>") -> tuple[dict, str]:
+    """YAML frontmatter and the body below it; ({}, text) when there is none. Frontmatter that is not valid
+    YAML (an unquoted colon inside a value is the usual case) raises BriefError with the line, so the caller
+    refuses with a message instead of a parser traceback."""
     if text.startswith("---"):
         parts = text.split("---", 2)
         if len(parts) >= 3:
-            meta = yaml.safe_load(parts[1]) or {}
+            try:
+                meta = yaml.safe_load(parts[1]) or {}
+            except yaml.YAMLError as e:
+                mark = getattr(e, "problem_mark", None)
+                where = f" at frontmatter line {mark.line + 1}" if mark is not None else ""
+                problem = getattr(e, "problem", None) or str(e).splitlines()[0]
+                raise BriefError(path, [f"frontmatter is not valid YAML: {problem}{where}; quote values that contain a colon"]) from None
             return (meta if isinstance(meta, dict) else {}), parts[2].strip()
     return {}, text.strip()
 
@@ -102,7 +110,7 @@ class ContentBrief:
 
 def load_content_brief(path: str | Path) -> ContentBrief:
     p = Path(path)
-    meta, body = split_frontmatter(p.read_text(encoding="utf-8"))
+    meta, body = split_frontmatter(p.read_text(encoding="utf-8"), str(p))
     b = ContentBrief(
         body=body,
         title_hint=str(meta.get("title_hint", "") or ""),
