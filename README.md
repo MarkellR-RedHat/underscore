@@ -126,7 +126,7 @@ Renders are audible while they run. The record tap sits before the output device
 
 ## Reproducibility
 
-Every bed records its seed, its brief, and its program. Re-rendering a program gives the same music. A real bed from the published catalog is checked in under `examples/reproduce/`; on a Mac with Sonic Pi installed, this regenerates it exactly:
+Every bed records its seed, its brief, and its program. Re-rendering a program gives the same music. A real bed from the published catalog is checked in under `examples/reproduce/`; on a Mac with Sonic Pi installed, this regenerates the same music (the render is a realtime recording, so the file is not byte-identical, but every measurement matches):
 
 <!-- rot: skip -->
 ```bash
