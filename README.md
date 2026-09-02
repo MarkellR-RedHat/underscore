@@ -2,6 +2,8 @@
 
 Underscore makes background music for developer videos. You give it a short brief, or a video, and it returns a finished music bed: mastered to broadcast loudness, measured against what you asked for, and dedicated to the public domain. Every track ships with the source code that produced it, so anyone can regenerate or change it.
 
+![underscore score rendering and gate-checking a bed](assets/demo.png)
+
 It runs on your own machine with your own accounts. Nothing is hosted. The audio never leaves your computer, and in brief mode nothing else does either.
 
 ## Why it exists

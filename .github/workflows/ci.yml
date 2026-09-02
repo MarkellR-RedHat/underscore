@@ -3,24 +3,42 @@ name: ci
 on:
   push:
     branches: [master]
+    tags: ["0.*"]
   pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 11 * * 1"
 
 jobs:
   tests:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
         python: ["3.10", "3.12"]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
       - name: Linux system deps
-        if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libatomic1 ffmpeg
+      - run: pip install -e '.[dev]'
+      - run: python -m pytest -q tests
+
+  tests-macos:
+    # Decision 14: macOS only on release tags, manual runs, or the weekly schedule
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/0.')
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.12"]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
       - run: pip install -e '.[dev]'
       - run: python -m pytest -q tests
 
