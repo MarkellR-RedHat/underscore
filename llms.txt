@@ -5,5 +5,5 @@
 <!-- rot: verified section, written by rot llms -->
 <!-- every document below was replayed in a clean container; last run 2026-09-02 -->
 - [Underscore](README.md): commands verified 2026-09-02
-- [Underscore in twenty seconds](docs/DEMO.md): STALE since 2026-09-02: do not trust the commands
+- [Underscore in twenty seconds](docs/DEMO.md): commands verified 2026-09-02
 <!-- rot: end verified section -->
