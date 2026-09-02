@@ -56,6 +56,20 @@
     "ffmpeg -version | head -1": "ffmpeg version 7.1.5-0+deb13u1 Copyright (c) 2000-2026 the FFmpeg developers",
     "python3 -c \"import importlib.metadata as m; print('rawlslab-underscore', m.version('rawlslab-underscore'))\"": "rawlslab-underscore 0.1.0rc1"
    }
+  },
+  "6e7b5c1efe65": {
+   "ordinal": 1,
+   "line": 55,
+   "kind": "shell",
+   "exit_code": 0,
+   "output": "",
+   "files": {},
+   "recorded_at": "2026-09-02T09:05:39Z",
+   "probes": {
+    "python3 --version": "Python 3.12.14",
+    "ffmpeg -version | head -1": "ffmpeg version 7.1.5-0+deb13u1 Copyright (c) 2000-2026 the FFmpeg developers",
+    "python3 -c \"import importlib.metadata as m; print('rawlslab-underscore', m.version('rawlslab-underscore'))\"": "rawlslab-underscore 0.1.0rc1"
+   }
   }
  },
  "title": "Underscore",
