@@ -93,6 +93,9 @@ def export_bundle(outdir: str | Path, brief: Brief, program: str | None,
         "license": "CC0-1.0",
     }
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2, default=float))
+    # The dedication travels inside every audio file (bext in WAVs, ID3 in the MP3), naming this manifest.
+    from .dedication import tag_bundle
+    tag_bundle(out, brief.title, files, __version__, measurements, manifest["generated_at"])
     # README.txt describes only the files this bundle actually contains.
     lines = [brief.title, "", f"Drop {Path(files['master']).name} under your video."]
     if "ducked" in files:
@@ -102,6 +105,7 @@ def export_bundle(outdir: str | Path, brief: Brief, program: str | None,
         lines.append("The .stem-*.wav files are separate instrument layers if you want to remix.")
     if "source" in files:
         lines.append("The .rb file is the Sonic Pi source: the code is the score.")
+    lines.append("Every WAV carries the dedication in its bext chunk and the MP3 in its ID3 tags, with the bed id and the sha256 of manifest.json.")
     lines += ["", "License: CC0. Use it for anything."]
     (out / "README.txt").write_text("\n".join(lines) + "\n")
     return manifest

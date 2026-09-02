@@ -62,7 +62,12 @@ def cmd_compose(a):
     from .compose import compose
     brief = Brief.load(a.brief)
     _die_if_invalid(brief)
-    code, program = compose(brief, a.llm, a.model)
+    try:
+        code, program = compose(brief, a.llm, a.model)
+    except RuntimeError as e:
+        # no backend configured, or the backend failed: one line, exit 2, no traceback
+        _p(f"compose: {e}")
+        sys.exit(2)
     out = Path(a.out or f"{brief.title}.rb")
     out.write_text(program)
     _p(f"wrote {out}")
@@ -194,7 +199,8 @@ def cmd_score(a):
             (work / f"{brief.title}.rb").write_text(program)
         except Exception as e:  # noqa: BLE001
             if engine == "sonicpi":
-                raise
+                _p(f"compose: {e}")
+                sys.exit(2)
             _p(f"compose unavailable ({e}); falling back to synth engine")
             engine = "synth"
 
