@@ -7,7 +7,8 @@
 One entry per bed that passed the gate. The index follows the family's bed
 catalog contract (Backdrop's docs/BED-CATALOG.md): top-level `version: 1` and,
 per bed, `id`, `file`, `duration_s`, `bpm`, `energy`, `mood`, `loop_safe`,
-`license`, `sha256`. Alongside those it keeps the fuller Underscore record:
+`license`, `sha256`, plus `recommended_for` (decision 23: `["video"]` for every Ember bed and every playful bed, `[]`
+otherwise). Alongside those it keeps the fuller Underscore record:
 collection, profile, key, mode, seed, the loudness and true-peak measurements,
 energy correlation, spectral centroid, engine, and the bundle file names
 (basenames relative to the bed's own folder).
@@ -47,6 +48,16 @@ def _energy(brief: dict) -> float | None:
     return round(weighted / total, 3)
 
 
+VIDEO_COLLECTIONS = ("ember",)
+VIDEO_PROFILES = ("playful",)
+
+
+def recommended_for(collection: str, profile: str) -> list[str]:
+    """Program decision 23: under video, the Ember collection and any playful-profile bed read right; the rest
+    reads too dark or too game-like. Additive: an empty list means no recommendation, not a warning."""
+    return ["video"] if collection in VIDEO_COLLECTIONS or profile in VIDEO_PROFILES else []
+
+
 def bed_entry(manifest_path: Path, flat: bool) -> dict | None:
     bed_dir = manifest_path.parent
     man = json.loads(manifest_path.read_text())
@@ -70,6 +81,7 @@ def bed_entry(manifest_path: Path, flat: bool) -> dict | None:
         "loop_safe": bool(man.get("loop", False)),
         "license": man.get("license", "CC0-1.0"),
         "sha256": _sha256(master_path),
+        "recommended_for": recommended_for(collection, profile),
         "collection": collection,
         "profile": profile,
         "key": brief.get("key"),

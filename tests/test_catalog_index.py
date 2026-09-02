@@ -57,6 +57,18 @@ def test_index_carries_the_contract_fields_and_the_underscore_record(tmp_path):
     assert e["collection"] == "analog" and e["key"] == "C" and e["seed"] == 7
     assert e["energy_correlation"] == 0.8123 and e["spectral_centroid_hz"] == 1234.6
     assert e["files"]["source"] == "demo-cmaj-30s-1.rb"
+    assert e["recommended_for"] == [] and entries[1]["recommended_for"] == []
+
+
+def test_recommended_for_video_is_ember_or_playful(tmp_path):
+    mod = _load()
+    assert mod.recommended_for("ember", "deep-dive") == ["video"]
+    assert mod.recommended_for("glass", "playful") == ["video"]
+    assert mod.recommended_for("ember", "playful") == ["video"]
+    assert mod.recommended_for("glass", "keynote") == []
+    _fake_bed(tmp_path, "ember", "keynote-cmaj-30s-9")
+    e = mod.bed_entry(tmp_path / "ember" / "keynote-cmaj-30s-9" / "manifest.json", flat=True)
+    assert e["recommended_for"] == ["video"]
 
 
 def test_flat_layout_and_top_level_version(tmp_path):
