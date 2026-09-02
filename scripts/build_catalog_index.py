@@ -17,7 +17,9 @@ energy correlation, spectral centroid, engine, and the bundle file names
 in the catalog tree, or the bare `<id>.master.wav` with `--flat` for a GitHub
 release, where every file sits at the root. `energy` is the duration-weighted
 mean of the brief's requested section energies (0 to 1; the under-speech rule
-is 0.55 or below). `mood` is the profile. `loop_safe` is the manifest's `loop`
+is 0.55 or below). The catalog publishes the value as measured; a reader applies
+its own caps (Backdrop lets a brand profile raise the under-speech cap for beds
+its music rule prefers), so a bed's energy is never edited to fit a reader. `mood` is the profile. `loop_safe` is the manifest's `loop`
 flag. `sha256` is the master WAV's hash, so a consumer can verify the file it
 downloads.
 """
