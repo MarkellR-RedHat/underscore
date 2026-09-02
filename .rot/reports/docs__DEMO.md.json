@@ -15,7 +15,7 @@
     "output_diff": [],
     "output_tail": "",
     "flaky": false,
-    "duration_ms": 71
+    "duration_ms": 52
    },
    {
     "id": "5a4537182a2c",
@@ -28,7 +28,7 @@
     "output_diff": [],
     "output_tail": "",
     "flaky": false,
-    "duration_ms": 8139
+    "duration_ms": 8966
    },
    {
     "id": "c1429a1e66d5",
@@ -41,13 +41,13 @@
     "output_diff": [],
     "output_tail": "",
     "flaky": false,
-    "duration_ms": 24
+    "duration_ms": 18
    }
   ],
   "first_failure": null
  },
  "run": {
-  "at": "2026-09-02T09:05:39Z",
+  "at": "2026-09-02T13:18:34Z",
   "image": "python:3.12-slim",
   "engine": "docker",
   "probes": {
