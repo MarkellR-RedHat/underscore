@@ -1,11 +1,11 @@
 # Rot report: Underscore in twenty seconds
 
-`docs/DEMO.md` · **FRESH** · run 2026-09-02T13:32:35Z · image `python:3.12-slim` · engine docker
+`docs/DEMO.md` · **FRESH** · run 2026-09-02T13:35:56Z · image `python:3.12-slim` · engine docker
 
 | # | line | status | time | detail |
 |---|---|---|---|---|
-| 1 | 7 | works | 0.1s |  |
-| 2 | 13 | works | 8.2s |  |
+| 1 | 7 | works | 0.0s |  |
+| 2 | 13 | works | 4.2s |  |
 | 3 | 19 | works | 0.0s |  |
 
 works: 3
