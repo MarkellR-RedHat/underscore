@@ -7,7 +7,7 @@ import os
 import sys
 from pathlib import Path
 
-from .brief import Brief, default_brief
+from .brief import Brief, BriefError, default_brief
 
 
 def _p(msg: str) -> None:
@@ -60,8 +60,7 @@ def cmd_analyze(a):
 
 def cmd_compose(a):
     from .compose import compose
-    brief = Brief.load(a.brief)
-    _die_if_invalid(brief)
+    brief = _load_brief(a.brief)
     try:
         code, program = compose(brief, a.llm, a.model)
     except RuntimeError as e:
@@ -77,7 +76,7 @@ def cmd_render(a):
     from .render import render
     if a.sonic_pi_app:
         os.environ["UNDERSCORE_SONIC_PI_APP"] = a.sonic_pi_app
-    brief = Brief.load(a.brief)
+    brief = _load_brief(a.brief)
     program = Path(a.program).read_text() if a.program else None
     info = render(program, brief, a.out or f"{brief.title}.raw.wav", a.engine)
     _p(json.dumps(info, indent=2))
@@ -85,7 +84,7 @@ def cmd_render(a):
 
 def cmd_master(a):
     from .master import master, duck
-    brief = Brief.load(a.brief)
+    brief = _load_brief(a.brief)
     out = resolve_out(a.out, f"{brief.title}.master.wav")
     info = master(a.wav, out, brief, a.reference, loop=a.loop)
     if brief.speech and not a.no_duck:
@@ -95,11 +94,13 @@ def cmd_master(a):
 
 def cmd_measure(a):
     from .measure import measure, gate
-    brief = Brief.load(a.brief)
+    brief = _load_brief(a.brief)
     m = measure(a.wav, brief, loop=a.loop)
     ok, reasons = gate(m, brief, loop_trim_s=0.5 if a.loop else 0.0)
-    print(json.dumps({"passed": ok, "reasons": reasons, "measurements": m}, indent=2, default=float))
-    sys.exit(0 if ok else 2)
+    from .export import gate_report
+    report = gate_report(reasons, m)
+    print(json.dumps({"passed": report.passed, "reasons": reasons, "measurements": m, "gates": report.to_dict()}, indent=2, default=float))
+    sys.exit(report.exit_code)
 
 
 def cmd_doctor(a):
@@ -178,8 +179,7 @@ def cmd_score(a):
                       "speech_source": info["speech_source"]}
         _p(f"analyze: {len(info['cuts'])} cuts, {info['speech_spans']} speech spans ({info['speech_source']}), brief by {info['brief_source']}")
     else:
-        brief = Brief.load(a.brief)
-    _die_if_invalid(brief)
+        brief = _load_brief(a.brief)
     work = Path(a.workdir or f".underscore/{brief.title}")
     work.mkdir(parents=True, exist_ok=True)
     brief.save(work / "brief.json")
@@ -241,11 +241,13 @@ def cmd_score(a):
         sys.exit(2)
 
 
-def _die_if_invalid(brief: Brief) -> None:
-    errs = brief.validate()
-    if errs:
-        _p("brief invalid:")
-        for e in errs:
+def _load_brief(path) -> Brief:
+    """Load and validate; every problem is printed, then exit 1 (the shared BriefError carries them all)."""
+    try:
+        return Brief.load(path)
+    except BriefError as err:
+        _p(f"brief invalid: {err.path}")
+        for e in err.errors:
             _p(f"  - {e}")
         sys.exit(1)
 

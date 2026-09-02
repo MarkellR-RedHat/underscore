@@ -4,59 +4,27 @@ A brief is a duration, a tempo, a key, a list of timed sections with a mood
 and an energy, optional hit points, and optional speech spans. Brief mode
 means a human wrote it. Video mode means analyze.py derived it. The generator
 does not care which.
+
+The schema (fields, validation, JSON in and out) is the family's shared
+MusicBrief from rawlslab-core, vendored under _vendor/. What lives here is
+the music arithmetic: beats, bars, quantizing section boundaries to the bar
+grid, and the helpers that derive a brief from scene cuts.
 """
 from __future__ import annotations
 
 import json
 import math
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass
 from pathlib import Path
 
-MOODS = ["curious", "focused", "lift", "resolve", "tense", "warm",
-         "playful", "serious", "triumphant", "calm"]
-HIT_KINDS = ["riser", "soft-hit", "impact", "sparkle"]
+from ._vendor.brief import BriefError, Hit, MusicBrief, Section, Span, MOODS, HIT_KINDS  # noqa: F401
+
 BEATS_PER_BAR = 4
 
 
 @dataclass
-class Section:
-    start: float
-    end: float
-    mood: str = "focused"
-    energy: float = 0.5
-    notes: str = ""
-
-    @property
-    def duration(self) -> float:
-        return self.end - self.start
-
-
-@dataclass
-class Hit:
-    t: float
-    kind: str = "soft-hit"
-
-
-@dataclass
-class Span:
-    start: float
-    end: float
-
-
-@dataclass
-class Brief:
-    title: str
-    duration: float
-    bpm: int = 92
-    key: str = "D"
-    mode: str = "minor"
-    style: str = "warm electronic, analog pads, soft percussion"
-    seed: int = 1
-    target_lufs: float = -14.0
-    collection: str = "analog"
-    sections: list[Section] = field(default_factory=list)
-    hits: list[Hit] = field(default_factory=list)
-    speech: list[Span] = field(default_factory=list)
+class Brief(MusicBrief):
+    """MusicBrief plus the timing helpers the composer and renderer need."""
 
     # ---- timing helpers -------------------------------------------------
     @property
@@ -104,55 +72,14 @@ class Brief:
             h.t = round(round(h.t / self.bar_len) * self.bar_len, 3)
         return self
 
-    # ---- validation -----------------------------------------------------
-    def validate(self) -> list[str]:
-        errs: list[str] = []
-        if self.duration <= 0:
-            errs.append("duration must be positive")
-        if not 40 <= self.bpm <= 200:
-            errs.append("bpm out of range 40-200")
-        if self.mode not in ("major", "minor"):
-            errs.append("mode must be major or minor")
-        if not self.sections:
-            errs.append("at least one section required")
-        t = 0.0
-        for i, s in enumerate(self.sections):
-            if abs(s.start - t) > 0.05:
-                errs.append(f"section {i} starts at {s.start}, expected {t:.2f} (sections must be contiguous)")
-            if s.end <= s.start:
-                errs.append(f"section {i} has non-positive length")
-            if not 0.0 <= s.energy <= 1.0:
-                errs.append(f"section {i} energy must be 0..1")
-            if s.mood not in MOODS:
-                errs.append(f"section {i} mood '{s.mood}' not in {MOODS}")
-            t = s.end
-        if self.sections and abs(t - self.duration) > 0.05:
-            errs.append(f"sections end at {t:.2f}, brief duration is {self.duration}")
-        for h in self.hits:
-            if not 0 <= h.t <= self.duration:
-                errs.append(f"hit at {h.t} outside duration")
-            if h.kind not in HIT_KINDS:
-                errs.append(f"hit kind '{h.kind}' not in {HIT_KINDS}")
-        return errs
-
-    # ---- io -------------------------------------------------------------
-    def to_dict(self) -> dict:
-        return asdict(self)
-
-    @classmethod
-    def from_dict(cls, d: dict) -> "Brief":
-        d = dict(d)
-        d["sections"] = [Section(**s) for s in d.get("sections", [])]
-        d["hits"] = [Hit(**h) for h in d.get("hits", [])]
-        d["speech"] = [Span(**s) for s in d.get("speech", [])]
-        return cls(**d)
-
-    def save(self, path: str | Path) -> None:
-        Path(path).write_text(json.dumps(self.to_dict(), indent=2))
-
     @classmethod
     def load(cls, path: str | Path) -> "Brief":
-        return cls.from_dict(json.loads(Path(path).read_text()))
+        """Read and validate; a bad brief raises BriefError carrying every problem."""
+        b = cls.from_dict(json.loads(Path(path).read_text()))
+        errs = b.validate()
+        if errs:
+            raise BriefError(str(path), errs)
+        return b
 
 
 # ---- derivation helpers (used by analyze.py and init) -------------------

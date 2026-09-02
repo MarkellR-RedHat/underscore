@@ -26,7 +26,10 @@ Each bed is one folder:
 | `markers.csv`, `markers.edl` | Section and hit markers for the editing timeline. |
 | `brief.json` | Exactly what the generator was asked for. |
 | `manifest.json` | Seed, engine, every measurement, and the gate result. |
+| `gates.json` | The gate result in the family's shared report shape (the same file Galley and Backdrop write). |
 | `LICENSE-CC0.txt` | The public domain dedication. |
+
+The dedication also travels inside the audio: every WAV carries a Broadcast Wave `bext` chunk and the MP3 carries ID3 tags, each naming the bed, the CC0 license URL, and the sha256 of `manifest.json`, so a file separated from its folder still says what it is and what it may be used for.
 
 ## How it works
 
@@ -188,13 +191,15 @@ The real catalog runs on Sonic Pi, one realtime render at a time (the full 108-b
 
 ```text
 src/underscore/
-  brief.py     the brief schema, validation, bar quantization, derivation helpers
+  brief.py     bar arithmetic and derivation helpers over the shared brief schema
+  _vendor/     the family's shared brief schema and gate report, vendored from rawlslab-core
+  dedication.py  the CC0 dedication written into every WAV (bext) and MP3 (ID3)
   analyze.py   video -> brief (cuts, transcript, speech map)
   compose.py   brief -> Sonic Pi program (prompt, backends, validator, outer program)
   render.py    program -> WAV (Sonic Pi 5 headless, synth fallback)
   master.py    mastering chain, loudness, limiter, fades, ducking
   measure.py   measurements and the gate
-  export.py    the bundle
+  export.py    the bundle, manifest, gates.json
   cli.py       the command line
   prompts/compose.md   the composing spec the model follows
   vendor/underscore-record.rb  the headless recorder

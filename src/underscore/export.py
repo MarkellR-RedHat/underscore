@@ -14,6 +14,15 @@ from pathlib import Path
 from . import __version__
 from .brief import Brief
 from .master import preview_mp3
+from ._vendor.gates import Gate, Report, error, run_gates
+
+
+def gate_report(reasons: list[str], measurements: dict | None = None) -> Report:
+    """The bed's gate as the family's shared report: one gate, 'measure', its reasons as errors, the
+    measurements as stats. Empty reasons is a pass; exit code 0 or 2 comes from the report."""
+    stats = {k: v for k, v in (measurements or {}).items() if isinstance(v, (int, float)) and not isinstance(v, bool)}
+    gate = Gate("measure", lambda _subject: {"errors": [error("measure", r).to_dict() for r in reasons], "warnings": [], "stats": stats})
+    return run_gates([gate], None)
 
 CC0 = ("This audio is dedicated to the public domain under CC0 1.0 Universal.\n"
        "Use it in anything, commercial or not, with no attribution required.\n"
@@ -93,6 +102,8 @@ def export_bundle(outdir: str | Path, brief: Brief, program: str | None,
         "license": "CC0-1.0",
     }
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2, default=float))
+    # gates.json in the family's shared shape (vendored from rawlslab-core): the measure gate's reasons as errors.
+    gate_report(reasons, measurements).write(out / "gates.json")
     # The dedication travels inside every audio file (bext in WAVs, ID3 in the MP3), naming this manifest.
     from .dedication import tag_bundle
     tag_bundle(out, brief.title, files, __version__, measurements, manifest["generated_at"])
