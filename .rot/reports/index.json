@@ -1,5 +1,5 @@
 {
- "at": "2026-09-02T03:05:45Z",
+ "at": "2026-09-02T03:12:55Z",
  "documents": [
   {
    "doc": "README.md",
@@ -16,12 +16,13 @@
   {
    "doc": "docs/DEMO.md",
    "title": "Underscore in twenty seconds",
-   "status": "fresh",
-   "stale_since": null,
+   "status": "stale",
+   "stale_since": "2026-09-02T03:10:11Z",
    "counts": {
-    "works": 3
+    "dependency missing": 2,
+    "command failed": 1
    },
-   "first_failure": null
+   "first_failure": "block 1 line 7: dependency missing"
   }
  ]
 }

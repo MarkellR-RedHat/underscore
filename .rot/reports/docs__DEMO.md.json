@@ -2,52 +2,109 @@
  "verdict": {
   "doc": "docs/DEMO.md",
   "title": "Underscore in twenty seconds",
-  "status": "fresh",
+  "status": "stale",
   "blocks": [
    {
     "id": "9181ccd6bfe3",
     "ordinal": 1,
     "line": 7,
-    "status": "works",
-    "detail": "",
-    "exit_code": 0,
+    "status": "dependency missing",
+    "detail": "exit 1, recorded 0 (first failure: underscore init demo --duration 90)",
+    "exit_code": 1,
     "expected_exit": 0,
-    "output_diff": [],
-    "output_tail": "",
+    "output_diff": [
+     "@@ -1 +1,11 @@",
+     "-wrote demo.brief.json (edit moods, energies, hits, speech; then: underscore score --brief demo.brief.json)",
+     "+Traceback (most recent call last):",
+     "+ File \"/usr/local/bin/underscore\", line 5, in <module>",
+     "+ from underscore.cli import main",
+     "+ File \"/usr/local/lib/python3.12/site-packages/underscore/cli.py\", line 10, in <module>",
+     "+ from .brief import Brief, BriefError, default_brief",
+     "+ File \"/usr/local/lib/python3.12/site-packages/underscore/brief.py\", line 20, in <module>",
+     "+ from ._vendor.brief import BriefError, Hit, MusicBrief, Section, Span, MOODS, HIT_KINDS # noqa: F401",
+     "+ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+     "+ File \"/usr/local/lib/python3.12/site-packages/underscore/_vendor/brief.py\", line 27, in <module>",
+     "+ import yaml"
+    ],
+    "output_tail": "Traceback (most recent call last):\n  File \"/usr/local/bin/underscore\", line 5, in <module>\n    from underscore.cli import main\n  File \"/usr/local/lib/python3.12/site-packages/underscore/cli.py\", line 10, in <module>\n    from .brief import Brief, BriefError, default_brief\n  File \"/usr/local/lib/python3.12/site-packages/underscore/brief.py\", line 20, in <module>\n    from ._vendor.brief import BriefError, Hit, MusicBrief, Section, Span, MOODS, HIT_KINDS  # noqa: F401\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/site-packages/underscore/_vendor/brief.py\", line 27, in <module>\n    import yaml\nModuleNotFoundError: No module named 'yaml'",
     "flaky": false,
-    "duration_ms": 23
+    "duration_ms": 44
    },
    {
     "id": "5a4537182a2c",
     "ordinal": 2,
     "line": 13,
-    "status": "works",
-    "detail": "",
-    "exit_code": 0,
+    "status": "dependency missing",
+    "detail": "exit 1, recorded 0 (first failure: underscore score --brief demo.brief.json --engine synth)",
+    "exit_code": 1,
     "expected_exit": 0,
-    "output_diff": [],
-    "output_tail": "",
+    "output_diff": [
+     "@@ -1,4 +1,11 @@",
+     "-render: synth -> .underscore/demo/demo.raw.wav",
+     "-measure: -14.0 LUFS, peak -1.50 dBTP, LRA 3.0 LU -> PASS",
+     "-export: out/demo (8 files)",
+     "-timing: compose=<masked> render=<masked> master=<masked> measure=<masked>",
+     "+Traceback (most recent call last):",
+     "+ File \"/usr/local/bin/underscore\", line 5, in <module>",
+     "+ from underscore.cli import main",
+     "+ File \"/usr/local/lib/python3.12/site-packages/underscore/cli.py\", line 10, in <module>",
+     "+ from .brief import Brief, BriefError, default_brief",
+     "+ File \"/usr/local/lib/python3.12/site-packages/underscore/brief.py\", line 20, in <module>",
+     "+ from ._vendor.brief import BriefError, Hit, MusicBrief, Section, Span, MOODS, HIT_KINDS # noqa: F401"
+    ],
+    "output_tail": "Traceback (most recent call last):\n  File \"/usr/local/bin/underscore\", line 5, in <module>\n    from underscore.cli import main\n  File \"/usr/local/lib/python3.12/site-packages/underscore/cli.py\", line 10, in <module>\n    from .brief import Brief, BriefError, default_brief\n  File \"/usr/local/lib/python3.12/site-packages/underscore/brief.py\", line 20, in <module>\n    from ._vendor.brief import BriefError, Hit, MusicBrief, Section, Span, MOODS, HIT_KINDS  # noqa: F401\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/site-packages/underscore/_vendor/brief.py\", line 27, in <module>\n    import yaml\nModuleNotFoundError: No module named 'yaml'",
     "flaky": false,
-    "duration_ms": 3672
+    "duration_ms": 44
    },
    {
     "id": "c1429a1e66d5",
     "ordinal": 3,
     "line": 19,
-    "status": "works",
-    "detail": "",
-    "exit_code": 0,
+    "status": "command failed",
+    "detail": "exit 1, recorded 0 (first failure: python3 -c \"import json; m = json.load(open('out/demo/manifest.json')); print('gate_passed', m['gate_passed'], '|', round(m['measurements']['lufs_integrated'], 1), 'LUFS')\")",
+    "exit_code": 1,
     "expected_exit": 0,
-    "output_diff": [],
-    "output_tail": "",
+    "output_diff": [
+     "@@ -1 +1,3 @@",
+     "-gate_passed True | -14.0 LUFS",
+     "+Traceback (most recent call last):",
+     "+ File \"<string>\", line 1, in <module>",
+     "+FileNotFoundError: [Errno 2] No such file or directory: 'out/demo/manifest.json'"
+    ],
+    "output_tail": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\nFileNotFoundError: [Errno 2] No such file or directory: 'out/demo/manifest.json'",
     "flaky": false,
-    "duration_ms": 9
+    "duration_ms": 23
    }
   ],
-  "first_failure": null
+  "first_failure": {
+   "id": "9181ccd6bfe3",
+   "ordinal": 1,
+   "line": 7,
+   "status": "dependency missing",
+   "detail": "exit 1, recorded 0 (first failure: underscore init demo --duration 90)",
+   "exit_code": 1,
+   "expected_exit": 0,
+   "output_diff": [
+    "@@ -1 +1,11 @@",
+    "-wrote demo.brief.json (edit moods, energies, hits, speech; then: underscore score --brief demo.brief.json)",
+    "+Traceback (most recent call last):",
+    "+ File \"/usr/local/bin/underscore\", line 5, in <module>",
+    "+ from underscore.cli import main",
+    "+ File \"/usr/local/lib/python3.12/site-packages/underscore/cli.py\", line 10, in <module>",
+    "+ from .brief import Brief, BriefError, default_brief",
+    "+ File \"/usr/local/lib/python3.12/site-packages/underscore/brief.py\", line 20, in <module>",
+    "+ from ._vendor.brief import BriefError, Hit, MusicBrief, Section, Span, MOODS, HIT_KINDS # noqa: F401",
+    "+ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+    "+ File \"/usr/local/lib/python3.12/site-packages/underscore/_vendor/brief.py\", line 27, in <module>",
+    "+ import yaml"
+   ],
+   "output_tail": "Traceback (most recent call last):\n  File \"/usr/local/bin/underscore\", line 5, in <module>\n    from underscore.cli import main\n  File \"/usr/local/lib/python3.12/site-packages/underscore/cli.py\", line 10, in <module>\n    from .brief import Brief, BriefError, default_brief\n  File \"/usr/local/lib/python3.12/site-packages/underscore/brief.py\", line 20, in <module>\n    from ._vendor.brief import BriefError, Hit, MusicBrief, Section, Span, MOODS, HIT_KINDS  # noqa: F401\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/site-packages/underscore/_vendor/brief.py\", line 27, in <module>\n    import yaml\nModuleNotFoundError: No module named 'yaml'",
+   "flaky": false,
+   "duration_ms": 44
+  }
  },
  "run": {
-  "at": "2026-09-02T03:05:45Z",
+  "at": "2026-09-02T03:12:55Z",
   "image": "python:3.12-slim",
   "engine": "docker",
   "probes": {
@@ -58,6 +115,6 @@
   "error": null,
   "timed_out": false
  },
- "stale_since": null,
+ "stale_since": "2026-09-02T03:10:11Z",
  "releases": []
 }

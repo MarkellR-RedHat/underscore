@@ -15,7 +15,7 @@
     "output_diff": [],
     "output_tail": "",
     "flaky": false,
-    "duration_ms": 508
+    "duration_ms": 743
    },
    {
     "id": "a4b290ac92ee",
@@ -42,12 +42,12 @@
      "@@ -178,3 +178,3 @@",
      "  Building editable for rawlslab-underscore (pyproject.toml): finished with status 'done'",
      "- Created wheel for rawlslab-underscore: filename=rawlslab_underscore-0.1.0rc1-0.editable-py3-none-any.whl size=9451 sha256=<masked>",
-     "+ Created wheel for rawlslab-underscore: filename=rawlslab_underscore-0.1.0rc1-0.editable-py3-none-any.whl size=9699 sha256=<masked>",
+     "+ Created wheel for rawlslab-underscore: filename=rawlslab_underscore-0.1.0rc1-0.editable-py3-none-any.whl size=9824 sha256=<masked>",
      "  Stored in directory: <masked><masked>"
     ],
     "output_tail": "",
     "flaky": false,
-    "duration_ms": 20340
+    "duration_ms": 35633
    },
    {
     "id": "0a5c2de6d96f",
@@ -99,7 +99,7 @@
     "output_diff": [],
     "output_tail": "",
     "flaky": false,
-    "duration_ms": 6367
+    "duration_ms": 13394
    },
    {
     "id": "ab78eadf745c",
@@ -117,7 +117,7 @@
    {
     "id": "6460783e9cf0",
     "ordinal": 9,
-    "line": 212,
+    "line": 216,
     "status": "output differs",
     "detail": "same exit code, different output (nothing documented; informational)",
     "exit_code": 0,
@@ -126,18 +126,18 @@
      "@@ -54,3 +54,3 @@",
      "  Building editable for rawlslab-underscore (pyproject.toml): finished with status 'done'",
      "- Created wheel for rawlslab-underscore: filename=rawlslab_underscore-0.1.0rc1-0.editable-py3-none-any.whl size=9451 sha256=<masked>",
-     "+ Created wheel for rawlslab-underscore: filename=rawlslab_underscore-0.1.0rc1-0.editable-py3-none-any.whl size=9699 sha256=<masked>",
+     "+ Created wheel for rawlslab-underscore: filename=rawlslab_underscore-0.1.0rc1-0.editable-py3-none-any.whl size=9824 sha256=<masked>",
      "  Stored in directory: <masked><masked>"
     ],
     "output_tail": "",
     "flaky": false,
-    "duration_ms": 8343
+    "duration_ms": 17125
    }
   ],
   "first_failure": null
  },
  "run": {
-  "at": "2026-09-02T03:05:45Z",
+  "at": "2026-09-02T03:12:55Z",
   "image": "python:3.12-slim",
   "engine": "docker",
   "probes": {
