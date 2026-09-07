@@ -15,7 +15,7 @@
     "output_diff": [],
     "output_tail": "",
     "flaky": false,
-    "duration_ms": 973
+    "duration_ms": 703
    },
    {
     "id": "a4b290ac92ee",
@@ -42,7 +42,7 @@
      "@@ -10,166 +10,166 @@",
      " Collecting numpy>=1.24 (from rawlslab-underscore==0.1.0rc1)",
      "- <masked> numpy-2.5.2-cp312-cp312-<masked> (<masked>)",
-     "+ Using cached numpy-2.5.2-cp312-cp312-<masked> (<masked>)",
+     "+ Using cached numpy-2.5.3-cp312-cp312-<masked> (<masked>)",
      " Collecting soundfile>=0.12 (from rawlslab-underscore==0.1.0rc1)",
      "- <masked> soundfile-0.14.0-py2.py3-none-<masked> (<masked>)",
      "+ Using cached soundfile-0.14.0-py2.py3-none-<masked> (<masked>)",
@@ -54,7 +54,7 @@
     ],
     "output_tail": "",
     "flaky": false,
-    "duration_ms": 38675
+    "duration_ms": 38310
    },
    {
     "id": "0a5c2de6d96f",
@@ -106,7 +106,7 @@
     "output_diff": [],
     "output_tail": "",
     "flaky": false,
-    "duration_ms": 13770
+    "duration_ms": 13224
    },
    {
     "id": "ab78eadf745c",
@@ -130,28 +130,28 @@
     "exit_code": 0,
     "expected_exit": 0,
     "output_diff": [
+     "@@ -9,3 +9,3 @@",
+     "  Preparing editable metadata (pyproject.toml): finished with status 'done'",
+     "-Requirement already satisfied: numpy>=1.24 in ./.venv/lib/python3.12/site-packages (from rawlslab-underscore==0.1.0rc1) (2.5.2)",
+     "+Requirement already satisfied: numpy>=1.24 in ./.venv/lib/python3.12/site-packages (from rawlslab-underscore==0.1.0rc1) (2.5.3)",
+     " Requirement already satisfied: soundfile>=0.12 in ./.venv/lib/python3.12/site-packages (from rawlslab-underscore==0.1.0rc1) (0.14.0)",
      "@@ -18,3 +18,3 @@",
      " Collecting pytest>=8 (from rawlslab-underscore==0.1.0rc1)",
      "- <masked> pytest-9.1.1-py3-none-any.whl.metadata (<masked>)",
      "+ Using cached pytest-9.1.1-py3-none-any.whl.metadata (<masked>)",
      " Requirement already satisfied: numba>=0.61.0 in ./.venv/lib/python3.12/site-packages (from librosa>=0.10->rawlslab-underscore==0.1.0rc1) (0.67.0)",
      "@@ -29,8 +29,8 @@",
-     " Collecting iniconfig>=1.0.1 (from pytest>=8->rawlslab-underscore==0.1.0rc1)",
-     "- <masked> iniconfig-2.3.0-py3-none-any.whl.metadata (<masked>)",
-     "+ Using cached iniconfig-2.3.0-py3-none-any.whl.metadata (<masked>)",
-     " Requirement already satisfied: packaging>=22 in ./.venv/lib/python3.12/site-packages (from pytest>=8->rawlslab-underscore==0.1.0rc1) (26.3)",
-     " Collecting pluggy<2,>=1.5 (from pytest>=8->rawlslab-underscore==0.1.0rc1)",
-     "- <masked> pluggy-1.6.0-py3-none-any.whl.metadata (<masked>)"
+     " Collecting iniconfig>=1.0.1 (from pytest>=8->rawlslab-underscore==0.1.0rc1)"
     ],
     "output_tail": "",
     "flaky": false,
-    "duration_ms": 17303
+    "duration_ms": 16875
    }
   ],
   "first_failure": null
  },
  "run": {
-  "at": "2026-09-02T13:42:48Z",
+  "at": "2026-09-07T17:25:12Z",
   "image": "python:3.12-slim",
   "engine": "docker",
   "probes": {
