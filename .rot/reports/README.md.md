@@ -1,12 +1,12 @@
 # Rot report: Underscore
 
-`README.md` · **FRESH** · run 2026-09-07T17:25:12Z · image `python:3.12-slim` · engine docker
+`README.md` · **FRESH** · run 2026-09-14T17:53:17Z · image `python:3.12-slim` · engine docker
 
 | # | line | status | time | detail |
 |---|---|---|---|---|
-| 1 | 55 | works | 0.7s |  |
+| 1 | 55 | works | 0.8s |  |
 | 2 | 62 | skipped |  |  |
-| 3 | 69 | output differs | 38.3s | same exit code, different output (nothing documented; informational) |
+| 3 | 69 | output differs | 38.9s | same exit code, different output (nothing documented; informational) |
 | 4 | 80 | skipped |  |  |
 | 5 | 117 | skipped |  |  |
 | 6 | 135 | skipped |  |  |
@@ -36,16 +36,16 @@ works: 2, skipped: 5, output differs: 2
 ### Block 9 (line 216): output differs
 
 ```diff
-@@ -9,3 +9,3 @@
+@@ -9,6 +9,6 @@
   Preparing editable metadata (pyproject.toml): finished with status 'done'
 -Requirement already satisfied: numpy>=1.24 in ./.venv/lib/python3.12/site-packages (from rawlslab-underscore==0.1.0rc1) (2.5.2)
 +Requirement already satisfied: numpy>=1.24 in ./.venv/lib/python3.12/site-packages (from rawlslab-underscore==0.1.0rc1) (2.5.3)
  Requirement already satisfied: soundfile>=0.12 in ./.venv/lib/python3.12/site-packages (from rawlslab-underscore==0.1.0rc1) (0.14.0)
-@@ -18,3 +18,3 @@
+ Requirement already satisfied: pyloudnorm>=0.1.1 in ./.venv/lib/python3.12/site-packages (from rawlslab-underscore==0.1.0rc1) (0.2.0)
+-Requirement already satisfied: pedalboard>=0.9 in ./.venv/lib/python3.12/site-packages (from rawlslab-underscore==0.1.0rc1) (0.9.24)
++Requirement already satisfied: pedalboard>=0.9 in ./.venv/lib/python3.12/site-packages (from rawlslab-underscore==0.1.0rc1) (0.9.25)
+ Requirement already satisfied: librosa>=0.10 in ./.venv/lib/python3.12/site-packages (from rawlslab-underscore==0.1.0rc1) (1.0.0)
+@@ -18,6 +18,6 @@
  Collecting pytest>=8 (from rawlslab-underscore==0.1.0rc1)
 - <masked> pytest-9.1.1-py3-none-any.whl.metadata (<masked>)
-+ Using cached pytest-9.1.1-py3-none-any.whl.metadata (<masked>)
- Requirement already satisfied: numba>=0.61.0 in ./.venv/lib/python3.12/site-packages (from librosa>=0.10->rawlslab-underscore==0.1.0rc1) (0.67.0)
-@@ -29,8 +29,8 @@
- Collecting iniconfig>=1.0.1 (from pytest>=8->rawlslab-underscore==0.1.0rc1)
 ```
