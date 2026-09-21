@@ -3,7 +3,7 @@
 ## Verified documents
 
 <!-- rot: verified section, written by rot llms -->
-<!-- every document below was replayed in a clean container; last run 2026-09-14 -->
-- [Underscore](README.md): commands verified 2026-09-14
-- [Underscore in twenty seconds](docs/DEMO.md): commands verified 2026-09-14
+<!-- every document below was replayed in a clean container; last run 2026-09-21 -->
+- [Underscore](README.md): commands verified 2026-09-21
+- [Underscore in twenty seconds](docs/DEMO.md): commands verified 2026-09-21
 <!-- rot: end verified section -->
