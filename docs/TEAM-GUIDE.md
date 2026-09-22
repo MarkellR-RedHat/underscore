@@ -15,9 +15,28 @@ Before you generate anything, play the showcase track in `examples/showcase-drif
 | drift | Cinematic ambient, long pads, sparse pings |
 | orbit | Organic and friendly, kalimba, brushed percussion |
 
-## Quick path (no Sonic Pi, no LLM)
+## Easiest path (AI audio generation, no Sonic Pi)
 
-This uses the built-in synth engine. The music is simpler than a full render but perfectly usable for background.
+This sends your brief to a text-to-music model and gets audio back directly. No Sonic Pi install, no code generation step. The audio goes through the same mastering and quality gate as every other engine.
+
+```bash
+python3 -m venv .venv && . .venv/bin/activate
+pip install -e '.[video]'
+
+export UNDERSCORE_AUDIOGEN_URL="https://your-audio-endpoint/v1/audio"
+export UNDERSCORE_AUDIOGEN_KEY="your-key"
+
+underscore init my-track --duration 60
+underscore score --brief my-track.brief.json --engine audiogen --collection glass
+```
+
+Your music lands in `out/my-track/`. Grab `my-track.master.wav` and drop it under your video timeline.
+
+For commercial use in Red Hat videos, make sure whatever model you point it at has a license that allows commercial output. Self-hosting a permissively licensed model on OpenShift AI is the cleanest path.
+
+## Quick path (no Sonic Pi, no LLM, no model)
+
+This uses the built-in synth engine. No external dependencies at all. The music is simpler than a full render but perfectly usable for background.
 
 ```bash
 python3 -m venv .venv && . .venv/bin/activate

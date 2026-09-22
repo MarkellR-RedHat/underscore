@@ -1,13 +1,16 @@
 """render: code -> WAV.
 
-Two engines:
-  sonicpi : Sonic Pi 5 headless. The recorder (vendor/underscore-record.rb)
-            boots its own daemon and audio engine; the app does not need to
-            be running.
-  synth   : a small built-in numpy synth that renders the BRIEF directly. It
-            exists so the whole pipeline (master, measure, export) can run on a
-            machine where headless Sonic Pi is not working yet, and so tests
-            never depend on an external app. It also produces stems.
+Three engines:
+  sonicpi  : Sonic Pi 5 headless. The recorder (vendor/underscore-record.rb)
+             boots its own daemon and audio engine; the app does not need to
+             be running.
+  synth    : a small built-in numpy synth that renders the BRIEF directly. It
+             exists so the whole pipeline (master, measure, export) can run on a
+             machine where headless Sonic Pi is not working yet, and so tests
+             never depend on an external app. It also produces stems.
+  audiogen : sends the brief as a text prompt to a text-to-music model and
+             receives audio directly. No Sonic Pi, no code composition step.
+             See audiogen.py.
 """
 from __future__ import annotations
 
@@ -254,10 +257,14 @@ def render_synth(brief: Brief, out_wav: Path) -> dict:
     return {"engine": "synth", "raw": str(out_wav), "stems": stem_paths}
 
 
-def render(program: str | None, brief: Brief, out_wav: str | Path, engine: str = "auto") -> dict:
+def render(program: str | None, brief: Brief, out_wav: str | Path,
+           engine: str = "auto", model: str | None = None) -> dict:
     out_wav = Path(out_wav)
     if engine == "auto":
         engine = "sonicpi" if (program and sonicpi_available()) else "synth"
+    if engine == "audiogen":
+        from .audiogen import render_audiogen
+        return render_audiogen(brief, out_wav, model=model)
     if engine == "sonicpi":
         if not program:
             raise ValueError("sonicpi engine needs a program (run compose first)")

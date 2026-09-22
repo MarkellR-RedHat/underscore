@@ -36,8 +36,8 @@ The dedication also travels inside the audio: every WAV carries a Broadcast Wave
 The pipeline has six stages. Each one is a command, and `underscore score` runs them all.
 
 1. **Analyze** (video mode only). Scene cuts are detected with PySceneDetect. Speech is located with faster-whisper, and its timestamps become the speech map; WebRTC VAD is the fallback when there is no transcript. A tempo is chosen so that bar lines land near the scene cuts. The result is a brief. This stage runs entirely on your machine.
-2. **Compose.** The brief is turned into a prompt, and a language model writes Sonic Pi code: one function per section, one per hit, all in key, built from an allowed set of synths and samples. The model is yours, reached through one of three seams: a command-line agent you already run, a chat-completions HTTP endpoint, or a local model runner (see Backends). The code is validated (required functions present, no forbidden constructs, no helper names that collide with Sonic Pi's own API) and wrapped in a fixed outer program that sets tempo and seed and sequences the sections to an exact number of bars.
-3. **Render.** Sonic Pi 5 plays the program headlessly and records it. Rendering happens in real time: a 90 second bed takes about 90 seconds plus boot. A built-in synth engine can stand in when Sonic Pi is not available, so the rest of the pipeline stays testable. If Sonic Pi reports a runtime error, the errors are handed back to the model and the program is composed again once before the run is declared a failure.
+2. **Compose.** The brief is turned into a prompt, and a language model writes Sonic Pi code: one function per section, one per hit, all in key, built from an allowed set of synths and samples. The model is yours, reached through one of three seams: a command-line agent you already run, a chat-completions HTTP endpoint, or a local model runner (see Backends). The code is validated (required functions present, no forbidden constructs, no helper names that collide with Sonic Pi's own API) and wrapped in a fixed outer program that sets tempo and seed and sequences the sections to an exact number of bars. With `--engine audiogen`, this step is skipped entirely (see Audiogen below).
+3. **Render.** Sonic Pi 5 plays the program headlessly and records it. Rendering happens in real time: a 90 second bed takes about 90 seconds plus boot. A built-in synth engine can stand in when Sonic Pi is not available, so the rest of the pipeline stays testable. If Sonic Pi reports a runtime error, the errors are handed back to the model and the program is composed again once before the run is declared a failure. With `--engine audiogen`, a text-to-music model generates audio directly from the brief, skipping both compose and Sonic Pi.
 4. **Master.** A gentle chain (high-pass, compression, two shelves, light reverb), loudness normalization to the brief's target, a transparent peak limiter with true-peak headroom, and fades. With a reference track and `matchering` installed, the tonal balance is matched to the reference.
 5. **Measure.** Integrated loudness, true peak, loudness range, spectral centroid, and per-section onset density are computed. The gate refuses a bed whose loudness misses the target by more than 1 LU, whose true peak exceeds -1 dBTP, whose length is wrong, whose sections are silent, or whose energy curve does not follow the brief.
 6. **Export.** The bundle above is written. Beds that fail the gate are still written for inspection, but the manifest marks them as not shippable and the catalog page leaves them out.
@@ -121,6 +121,31 @@ underscore score --brief my-video.brief.json
 
 Any command that reads a prompt on stdin and prints the code on stdout works the same way, including local model runners.
 
+## Audiogen: text-to-music, no Sonic Pi
+
+The audiogen engine skips both the compose and Sonic Pi render steps. Instead, it converts your brief into a natural-language description of the music and sends it to a text-to-music model. The audio comes back and feeds into the same mastering, measurement, and export pipeline as every other engine.
+
+This is the lowest-friction path: no Sonic Pi install, no LLM code generation, just a music model and a brief.
+
+<!-- rot: skip -->
+```bash
+export UNDERSCORE_AUDIOGEN_URL="https://your-endpoint/v1/audio"
+export UNDERSCORE_AUDIOGEN_KEY="your-key"
+
+underscore score --brief my-video.brief.json --engine audiogen --collection drift
+```
+
+| Variable | Purpose |
+|---|---|
+| `UNDERSCORE_AUDIOGEN_URL` | HTTP endpoint that accepts a prompt and returns audio (HuggingFace Inference API, Replicate, or anything you self-host). |
+| `UNDERSCORE_AUDIOGEN_KEY` | Bearer token, when the endpoint needs one. |
+| `UNDERSCORE_AUDIOGEN_MODEL` | Model name, when the endpoint serves multiple. Falls back to `UNDERSCORE_MODEL`. |
+| `UNDERSCORE_AUDIOGEN_CLI` | Alternative to the HTTP path: a CLI command called with `--output <path> --duration <seconds>`, prompt on stdin. |
+
+The audiogen engine does not bundle or default to any model. You bring your own. If you need commercial-use rights (company videos, published content), choose a model whose license permits it: self-host a permissively licensed model on your own infrastructure, use a service with commercial terms, or train your own. Underscore does not care what is behind the endpoint; licensing is between you and your model provider.
+
+The mastering chain, gate, and export work identically regardless of engine. A bed made with audiogen ships the same bundle: mastered WAV, preview MP3, measurements, manifest, and CC0 dedication.
+
 ## The Sonic Pi render, in detail
 
 Sonic Pi 5 ships a headless boot library. `vendor/underscore-record.rb` builds on it: it starts the daemon and audio engine, begins recording through the spider (the same path the application's record button uses), runs the program for the brief's duration, saves the WAV, and shuts down. Two details matter. The engine pauses itself as soon as every run has completed, so the recorder keeps the run alive for several seconds past the end of the music. The first note can arrive a few seconds after recording starts on a fresh boot, so the recording window is longer than the brief and the pre-roll is trimmed afterwards.
@@ -141,13 +166,14 @@ Composing again from the same brief will produce different code, because the mod
 
 ## Data flow
 
-| Stage | Brief mode | Video mode, cloud model | Video mode, `--offline-brief` or `--llm local` |
-|---|---|---|---|
-| Analyze | not used | cuts, transcript, speech map computed locally | same |
-| Compose | brief text is sent to the model | brief plus transcript text and cut times are sent | nothing is sent |
-| Render, master, measure, export | local | local | local |
+| Stage | Brief mode | Video mode, cloud model | Video mode, `--offline-brief` or `--llm local` | `--engine audiogen` |
+|---|---|---|---|---|
+| Analyze | not used | cuts, transcript, speech map computed locally | same | not used (brief mode) or same (video mode) |
+| Compose | brief text is sent to the model | brief plus transcript text and cut times are sent | nothing is sent | skipped |
+| Render | local | local | local | music description prompt is sent to the audio model |
+| Master, measure, export | local | local | local | local |
 
-Audio, video frames, and finished tracks never leave the machine in any mode. If the source footage is confidential, use the third column.
+Audio, video frames, and finished tracks never leave the machine in any mode. With audiogen, a text description of the desired music is sent to the audio generation endpoint; no audio, video, or transcript data is included. If the source footage is confidential, use `--offline-brief` or `--llm local`.
 
 ## Using it at work
 
@@ -196,7 +222,8 @@ src/underscore/
   dedication.py  the CC0 dedication written into every WAV (bext) and MP3 (ID3)
   analyze.py   video -> brief (cuts, transcript, speech map)
   compose.py   brief -> Sonic Pi program (prompt, backends, validator, outer program)
-  render.py    program -> WAV (Sonic Pi 5 headless, synth fallback)
+  audiogen.py  brief -> audio via text-to-music model (no Sonic Pi, no compose)
+  render.py    program -> WAV (Sonic Pi 5 headless, synth fallback, audiogen)
   master.py    mastering chain, loudness, limiter, fades, ducking
   measure.py   measurements and the gate
   export.py    the bundle, manifest, gates.json

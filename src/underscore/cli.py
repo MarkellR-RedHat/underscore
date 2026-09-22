@@ -78,7 +78,8 @@ def cmd_render(a):
         os.environ["UNDERSCORE_SONIC_PI_APP"] = a.sonic_pi_app
     brief = _load_brief(a.brief)
     program = Path(a.program).read_text() if a.program else None
-    info = render(program, brief, a.out or f"{brief.title}.raw.wav", a.engine)
+    info = render(program, brief, a.out or f"{brief.title}.raw.wav", a.engine,
+                  model=getattr(a, "model", None))
     _p(json.dumps(info, indent=2))
 
 
@@ -154,6 +155,13 @@ def cmd_doctor(a):
         ok(f"api backend: UNDERSCORE_API_URL set" + ("" if os.environ.get("UNDERSCORE_MODEL") else "  (remember UNDERSCORE_MODEL or --model)"))
     if os.environ.get("UNDERSCORE_LOCAL"):
         ok("local backend: UNDERSCORE_LOCAL set")
+    if os.environ.get("UNDERSCORE_AUDIOGEN_URL"):
+        ok(f"audiogen backend: UNDERSCORE_AUDIOGEN_URL set (--engine audiogen)")
+    elif os.environ.get("UNDERSCORE_AUDIOGEN_CLI"):
+        ag_bin = _shlex.split(os.environ["UNDERSCORE_AUDIOGEN_CLI"])[0]
+        (ok if _sh.which(ag_bin) else no)(f"audiogen CLI: UNDERSCORE_AUDIOGEN_CLI = {os.environ['UNDERSCORE_AUDIOGEN_CLI']!r}" + ("" if _sh.which(ag_bin) else f"  ({ag_bin} not on PATH)"))
+    else:
+        no("audiogen backend unconfigured: set UNDERSCORE_AUDIOGEN_URL or UNDERSCORE_AUDIOGEN_CLI for --engine audiogen (text-to-music, no Sonic Pi needed)")
     free_gb = _sh.disk_usage(".").free / 1e9
     (ok if free_gb > 2 else no)(f"{free_gb:.1f} GB free on this volume" + ("" if free_gb > 2 else "  (renders need room)"))
 
@@ -192,6 +200,8 @@ def cmd_score(a):
     if a.program:
         program = Path(a.program).read_text()
         _p(f"compose: reusing {a.program}")
+    elif engine == "audiogen":
+        _p("compose: skipped (audiogen generates audio directly from the brief)")
     elif engine != "synth":
         try:
             _p(f"compose: asking {a.llm} for Sonic Pi code")
@@ -207,7 +217,7 @@ def cmd_score(a):
     timings["compose"] = round(_time.perf_counter() - _t, 1); _t = _time.perf_counter()
     from .render import RenderError
     try:
-        rinfo = render(program, brief, work / f"{brief.title}.raw.wav", engine)
+        rinfo = render(program, brief, work / f"{brief.title}.raw.wav", engine, model=a.model)
     except RenderError as err:
         # Sonic Pi rejected the program at runtime: hand the errors back to the
         # model once, then try again. Static validation cannot catch everything.
@@ -218,7 +228,7 @@ def cmd_score(a):
         _, program = compose(brief, a.llm, a.model, feedback=fb)
         (work / f"{brief.title}.rb").write_text(program)
         timings["recompose"] = round(_time.perf_counter() - _t, 1); _t = _time.perf_counter()
-        rinfo = render(program, brief, work / f"{brief.title}.raw.wav", engine)
+        rinfo = render(program, brief, work / f"{brief.title}.raw.wav", engine, model=a.model)
     timings["render"] = round(_time.perf_counter() - _t, 1); _t = _time.perf_counter()
     _p(f"render: {rinfo['engine']} -> {rinfo['raw']}" + (f"  (preroll {rinfo['preroll_s']}s)" if 'preroll_s' in rinfo else ""))
     minfo = master(rinfo["raw"], work / f"{brief.title}.master.wav", brief, a.reference, loop=a.loop)
@@ -259,7 +269,7 @@ def main(argv=None):
     s = sub.add_parser("init", help="write a starter brief"); s.add_argument("title"); s.add_argument("--duration", type=float, default=60.0); s.add_argument("-o", "--out"); s.set_defaults(fn=cmd_init)
     s = sub.add_parser("analyze", help="video -> brief (local)"); s.add_argument("video"); s.add_argument("--title"); s.add_argument("--llm", default=None, choices=[None, "cli", "api", "local"]); s.add_argument("--model"); s.add_argument("--no-transcript", action="store_true"); s.add_argument("-o", "--out"); s.set_defaults(fn=cmd_analyze)
     s = sub.add_parser("compose", help="brief -> Sonic Pi program"); s.add_argument("brief"); s.add_argument("--llm", default="cli", choices=["cli", "api", "local"]); s.add_argument("--model"); s.add_argument("-o", "--out"); s.set_defaults(fn=cmd_compose)
-    s = sub.add_parser("render", help="program -> raw WAV"); s.add_argument("--brief", required=True); s.add_argument("--program"); s.add_argument("--engine", default="auto", choices=["auto", "sonicpi", "synth"]); s.add_argument("--sonic-pi-app", help="Sonic Pi application path (default /Applications/Sonic Pi.app)"); s.add_argument("-o", "--out"); s.set_defaults(fn=cmd_render)
+    s = sub.add_parser("render", help="program -> raw WAV"); s.add_argument("--brief", required=True); s.add_argument("--program"); s.add_argument("--engine", default="auto", choices=["auto", "sonicpi", "synth", "audiogen"]); s.add_argument("--model", help="model name for audiogen engine"); s.add_argument("--sonic-pi-app", help="Sonic Pi application path (default /Applications/Sonic Pi.app)"); s.add_argument("-o", "--out"); s.set_defaults(fn=cmd_render)
     s = sub.add_parser("master", help="raw WAV -> mastered bed"); s.add_argument("wav"); s.add_argument("--brief", required=True); s.add_argument("--reference"); s.add_argument("--no-duck", action="store_true"); s.add_argument("--loop", action="store_true", help="loop-safe: no fades, seam crossfaded for tiling"); s.add_argument("-o", "--out"); s.set_defaults(fn=cmd_master)
     s = sub.add_parser("doctor", help="check this machine: renderer, tools, backends"); s.add_argument("--sonic-pi-app"); s.set_defaults(fn=cmd_doctor)
     s = sub.add_parser("measure", help="measure + gate"); s.add_argument("wav"); s.add_argument("--brief", required=True); s.add_argument("--loop", action="store_true", help="the WAV is a loop-safe bed (seam check, trimmed duration)"); s.set_defaults(fn=cmd_measure)
@@ -267,7 +277,7 @@ def main(argv=None):
     g = s.add_mutually_exclusive_group(required=True); g.add_argument("--brief"); g.add_argument("--video")
     s.add_argument("--title"); s.add_argument("--llm", default="cli", choices=["cli", "api", "local"]); s.add_argument("--model")
     s.add_argument("--offline-brief", action="store_true", help="video mode: derive the brief heuristically, no model call")
-    s.add_argument("--engine", default="auto", choices=["auto", "sonicpi", "synth"]); s.add_argument("--reference")
+    s.add_argument("--engine", default="auto", choices=["auto", "sonicpi", "synth", "audiogen"]); s.add_argument("--reference")
     s.add_argument("--program", help="reuse an existing Sonic Pi program (skip compose)")
     s.add_argument("--loop", action="store_true", help="loop-safe bed: no fades, seam crossfaded so the track tiles")
     s.add_argument("--sonic-pi-app", help="Sonic Pi application path (default /Applications/Sonic Pi.app)")
