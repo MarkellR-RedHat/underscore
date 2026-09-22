@@ -15,7 +15,7 @@
     "output_diff": [],
     "output_tail": "",
     "flaky": false,
-    "duration_ms": 807
+    "duration_ms": 596
    },
    {
     "id": "a4b290ac92ee",
@@ -54,7 +54,7 @@
     ],
     "output_tail": "",
     "flaky": false,
-    "duration_ms": 35311
+    "duration_ms": 37206
    },
    {
     "id": "0a5c2de6d96f",
@@ -83,9 +83,22 @@
     "duration_ms": null
    },
    {
-    "id": "8543dca08b5a",
+    "id": "f9f72928e5ef",
     "ordinal": 6,
-    "line": 135,
+    "line": 131,
+    "status": "skipped",
+    "detail": "",
+    "exit_code": null,
+    "expected_exit": null,
+    "output_diff": [],
+    "output_tail": "",
+    "flaky": false,
+    "duration_ms": null
+   },
+   {
+    "id": "8543dca08b5a",
+    "ordinal": 7,
+    "line": 160,
     "status": "skipped",
     "detail": "",
     "exit_code": null,
@@ -97,8 +110,8 @@
    },
    {
     "id": "92c46b61fce7",
-    "ordinal": 7,
-    "line": 177,
+    "ordinal": 8,
+    "line": 203,
     "status": "works",
     "detail": "",
     "exit_code": 0,
@@ -106,12 +119,12 @@
     "output_diff": [],
     "output_tail": "",
     "flaky": false,
-    "duration_ms": 13057
+    "duration_ms": 13275
    },
    {
     "id": "ab78eadf745c",
-    "ordinal": 8,
-    "line": 185,
+    "ordinal": 9,
+    "line": 211,
     "status": "skipped",
     "detail": "",
     "exit_code": null,
@@ -123,8 +136,8 @@
    },
    {
     "id": "6460783e9cf0",
-    "ordinal": 9,
-    "line": 216,
+    "ordinal": 10,
+    "line": 243,
     "status": "output differs",
     "detail": "same exit code, different output (nothing documented; informational)",
     "exit_code": 0,
@@ -145,13 +158,13 @@
     ],
     "output_tail": "",
     "flaky": false,
-    "duration_ms": 16839
+    "duration_ms": 19174
    }
   ],
   "first_failure": null
  },
  "run": {
-  "at": "2026-09-22T19:24:52Z",
+  "at": "2026-09-22T19:41:08Z",
   "image": "python:3.12-slim",
   "engine": "docker",
   "probes": {
