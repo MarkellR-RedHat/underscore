@@ -15,7 +15,7 @@
     "output_diff": [],
     "output_tail": "",
     "flaky": false,
-    "duration_ms": 728
+    "duration_ms": 807
    },
    {
     "id": "a4b290ac92ee",
@@ -39,22 +39,22 @@
     "exit_code": 0,
     "expected_exit": 0,
     "output_diff": [
-     "@@ -10,166 +10,166 @@",
-     " Collecting numpy>=1.24 (from rawlslab-underscore==0.1.0rc1)",
+     "@@ -9,175 +9,175 @@",
+     "  Preparing editable metadata (pyproject.toml): finished with status 'done'",
+     "-Collecting numpy>=1.24 (from rawlslab-underscore==0.1.0rc1)",
      "- <masked> numpy-2.5.2-cp312-cp312-<masked> (<masked>)",
-     "+ Using cached numpy-2.5.3-cp312-cp312-<masked> (<masked>)",
-     " Collecting soundfile>=0.12 (from rawlslab-underscore==0.1.0rc1)",
+     "-Collecting soundfile>=0.12 (from rawlslab-underscore==0.1.0rc1)",
      "- <masked> soundfile-0.14.0-py2.py3-none-<masked> (<masked>)",
-     "+ Using cached soundfile-0.14.0-py2.py3-none-<masked> (<masked>)",
-     " Collecting pyloudnorm>=0.1.1 (from rawlslab-underscore==0.1.0rc1)",
+     "-Collecting pyloudnorm>=0.1.1 (from rawlslab-underscore==0.1.0rc1)",
      "- <masked> pyloudnorm-0.2.0-py3-none-any.whl.metadata (<masked>)",
-     "+ Using cached pyloudnorm-0.2.0-py3-none-any.whl.metadata (<masked>)",
-     " Collecting pedalboard>=0.9 (from rawlslab-underscore==0.1.0rc1)",
-     "- <masked> pedalboard-0.9.24-cp312-cp312-<masked> (<masked>)"
+     "-Collecting pedalboard>=0.9 (from rawlslab-underscore==0.1.0rc1)",
+     "- <masked> pedalboard-0.9.24-cp312-cp312-<masked> (<masked>)",
+     "-Collecting librosa>=0.10 (from rawlslab-underscore==0.1.0rc1)",
+     "- <masked> librosa-1.0.0-py3-none-any.whl.metadata (<masked>)"
     ],
     "output_tail": "",
     "flaky": false,
-    "duration_ms": 39440
+    "duration_ms": 35311
    },
    {
     "id": "0a5c2de6d96f",
@@ -106,7 +106,7 @@
     "output_diff": [],
     "output_tail": "",
     "flaky": false,
-    "duration_ms": 13848
+    "duration_ms": 13057
    },
    {
     "id": "ab78eadf745c",
@@ -130,34 +130,34 @@
     "exit_code": 0,
     "expected_exit": 0,
     "output_diff": [
-     "@@ -9,6 +9,6 @@",
+     "@@ -9,57 +9,57 @@",
      "  Preparing editable metadata (pyproject.toml): finished with status 'done'",
      "-Requirement already satisfied: numpy>=1.24 in ./.venv/lib/python3.12/site-packages (from rawlslab-underscore==0.1.0rc1) (2.5.2)",
-     "+Requirement already satisfied: numpy>=1.24 in ./.venv/lib/python3.12/site-packages (from rawlslab-underscore==0.1.0rc1) (2.5.3)",
-     " Requirement already satisfied: soundfile>=0.12 in ./.venv/lib/python3.12/site-packages (from rawlslab-underscore==0.1.0rc1) (0.14.0)",
-     " Requirement already satisfied: pyloudnorm>=0.1.1 in ./.venv/lib/python3.12/site-packages (from rawlslab-underscore==0.1.0rc1) (0.2.0)",
+     "-Requirement already satisfied: soundfile>=0.12 in ./.venv/lib/python3.12/site-packages (from rawlslab-underscore==0.1.0rc1) (0.14.0)",
+     "-Requirement already satisfied: pyloudnorm>=0.1.1 in ./.venv/lib/python3.12/site-packages (from rawlslab-underscore==0.1.0rc1) (0.2.0)",
      "-Requirement already satisfied: pedalboard>=0.9 in ./.venv/lib/python3.12/site-packages (from rawlslab-underscore==0.1.0rc1) (0.9.24)",
-     "+Requirement already satisfied: pedalboard>=0.9 in ./.venv/lib/python3.12/site-packages (from rawlslab-underscore==0.1.0rc1) (0.9.25)",
-     " Requirement already satisfied: librosa>=0.10 in ./.venv/lib/python3.12/site-packages (from rawlslab-underscore==0.1.0rc1) (1.0.0)",
-     "@@ -18,6 +18,6 @@",
-     " Collecting pytest>=8 (from rawlslab-underscore==0.1.0rc1)",
+     "-Requirement already satisfied: librosa>=0.10 in ./.venv/lib/python3.12/site-packages (from rawlslab-underscore==0.1.0rc1) (1.0.0)",
+     "-Requirement already satisfied: python-osc>=1.8 in ./.venv/lib/python3.12/site-packages (from rawlslab-underscore==0.1.0rc1) (1.10.2)",
+     "-Requirement already satisfied: mutagen>=1.47 in ./.venv/lib/python3.12/site-packages (from rawlslab-underscore==0.1.0rc1) (1.48.1)",
+     "-Requirement already satisfied: pyyaml>=6 in ./.venv/lib/python3.12/site-packages (from rawlslab-underscore==0.1.0rc1) (6.0.3)",
+     "-Collecting pytest>=8 (from rawlslab-underscore==0.1.0rc1)",
      "- <masked> pytest-9.1.1-py3-none-any.whl.metadata (<masked>)"
     ],
     "output_tail": "",
     "flaky": false,
-    "duration_ms": 17793
+    "duration_ms": 16839
    }
   ],
   "first_failure": null
  },
  "run": {
-  "at": "2026-09-21T18:01:29Z",
+  "at": "2026-09-22T19:24:52Z",
   "image": "python:3.12-slim",
   "engine": "docker",
   "probes": {
    "python3 --version": "Python 3.12.14",
    "ffmpeg -version | head -1": "ffmpeg version 7.1.5-0+deb13u1 Copyright (c) 2000-2026 the FFmpeg developers",
-   "python3 -c \"import importlib.metadata as m; print('rawlslab-underscore', m.version('rawlslab-underscore'))\"": "rawlslab-underscore 0.1.0rc1"
+   "python3 -c \"import importlib.metadata as m; print('rawlslab-underscore', m.version('rawlslab-underscore'))\"": "Traceback (most recent call last):\n  File \"/usr/local/lib/python3.12/importlib/metadata/__init__.py\", line 397, in from_name\n    return next(cls.discover(name=name))\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nStopIteration\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/usr/local/lib/python3.12/importlib/metadata/__init__.py\", line 889, in version\n    return distribution(distribution_name).version\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/importlib/metadata/__init__.py\", line 862, in distribution\n    return Distribution.from_name(distribution_name)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/importlib/metadata/__init__.py\", line 399, in from_name\n    raise PackageNotFoundError(name)\nimportlib.metadata.PackageNotFoundError: No package metadata was found for rawlslab-underscore"
   },
   "error": null,
   "timed_out": false
