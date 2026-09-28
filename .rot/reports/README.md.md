@@ -1,26 +1,26 @@
 # Rot report: Underscore
 
-`README.md` · **FRESH** · run 2026-09-22T19:41:08Z · image `python:3.12-slim` · engine docker
+`README.md` · **FRESH** · run 2026-09-28T12:34:47Z · image `python:3.12-slim` · engine docker
 
 | # | line | status | time | detail |
 |---|---|---|---|---|
-| 1 | 55 | works | 0.6s |  |
+| 1 | 55 | works | 0.8s |  |
 | 2 | 62 | skipped |  |  |
-| 3 | 69 | output differs | 37.2s | same exit code, different output (nothing documented; informational) |
+| 3 | 69 | output differs | 36.2s | same exit code, different output (nothing documented; informational) |
 | 4 | 80 | skipped |  |  |
 | 5 | 117 | skipped |  |  |
 | 6 | 131 | skipped |  |  |
 | 7 | 160 | skipped |  |  |
-| 8 | 203 | works | 13.3s |  |
+| 8 | 203 | works | 13.0s |  |
 | 9 | 211 | skipped |  |  |
-| 10 | 243 | output differs | 19.2s | same exit code, different output (nothing documented; informational) |
+| 10 | 243 | output differs | 16.7s | same exit code, different output (nothing documented; informational) |
 
 works: 2, skipped: 6, output differs: 2
 
 ### Block 3 (line 69): output differs
 
 ```diff
-@@ -9,175 +9,175 @@
+@@ -9,175 +9,183 @@
   Preparing editable metadata (pyproject.toml): finished with status 'done'
 -Collecting numpy>=1.24 (from rawlslab-underscore==0.1.0rc1)
 - <masked> numpy-2.5.2-cp312-cp312-<masked> (<masked>)
