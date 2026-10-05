@@ -15,7 +15,7 @@
     "output_diff": [],
     "output_tail": "",
     "flaky": false,
-    "duration_ms": 824
+    "duration_ms": 709
    },
    {
     "id": "a4b290ac92ee",
@@ -54,7 +54,7 @@
     ],
     "output_tail": "",
     "flaky": false,
-    "duration_ms": 36231
+    "duration_ms": 35282
    },
    {
     "id": "0a5c2de6d96f",
@@ -119,7 +119,7 @@
     "output_diff": [],
     "output_tail": "",
     "flaky": false,
-    "duration_ms": 12983
+    "duration_ms": 13007
    },
    {
     "id": "ab78eadf745c",
@@ -158,17 +158,17 @@
     ],
     "output_tail": "",
     "flaky": false,
-    "duration_ms": 16667
+    "duration_ms": 16515
    }
   ],
   "first_failure": null
  },
  "run": {
-  "at": "2026-09-28T12:34:47Z",
+  "at": "2026-10-05T12:34:10Z",
   "image": "python:3.12-slim",
   "engine": "docker",
   "probes": {
-   "python3 --version": "Python 3.12.14",
+   "python3 --version": "Python 3.12.15",
    "ffmpeg -version | head -1": "ffmpeg version 7.1.5-0+deb13u1 Copyright (c) 2000-2026 the FFmpeg developers",
    "python3 -c \"import importlib.metadata as m; print('rawlslab-underscore', m.version('rawlslab-underscore'))\"": "Traceback (most recent call last):\n  File \"/usr/local/lib/python3.12/importlib/metadata/__init__.py\", line 397, in from_name\n    return next(cls.discover(name=name))\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nStopIteration\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/usr/local/lib/python3.12/importlib/metadata/__init__.py\", line 889, in version\n    return distribution(distribution_name).version\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/importlib/metadata/__init__.py\", line 862, in distribution\n    return Distribution.from_name(distribution_name)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/importlib/metadata/__init__.py\", line 399, in from_name\n    raise PackageNotFoundError(name)\nimportlib.metadata.PackageNotFoundError: No package metadata was found for rawlslab-underscore"
   },

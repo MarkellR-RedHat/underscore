@@ -1,19 +1,19 @@
 # Rot report: Underscore
 
-`README.md` · **FRESH** · run 2026-09-28T12:34:47Z · image `python:3.12-slim` · engine docker
+`README.md` · **FRESH** · run 2026-10-05T12:34:10Z · image `python:3.12-slim` · engine docker
 
 | # | line | status | time | detail |
 |---|---|---|---|---|
-| 1 | 55 | works | 0.8s |  |
+| 1 | 55 | works | 0.7s |  |
 | 2 | 62 | skipped |  |  |
-| 3 | 69 | output differs | 36.2s | same exit code, different output (nothing documented; informational) |
+| 3 | 69 | output differs | 35.3s | same exit code, different output (nothing documented; informational) |
 | 4 | 80 | skipped |  |  |
 | 5 | 117 | skipped |  |  |
 | 6 | 131 | skipped |  |  |
 | 7 | 160 | skipped |  |  |
 | 8 | 203 | works | 13.0s |  |
 | 9 | 211 | skipped |  |  |
-| 10 | 243 | output differs | 16.7s | same exit code, different output (nothing documented; informational) |
+| 10 | 243 | output differs | 16.5s | same exit code, different output (nothing documented; informational) |
 
 works: 2, skipped: 6, output differs: 2
 
